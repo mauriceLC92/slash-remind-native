@@ -6,9 +6,9 @@ final class HotKeyService {
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private let detector: DoublePressDetector
-    private let callback: () -> Void
+    private let callback: @Sendable () -> Void
 
-    init(detector: DoublePressDetector = DoublePressDetector(), callback: @escaping () -> Void) {
+    init(detector: DoublePressDetector = DoublePressDetector(), callback: @escaping @Sendable () -> Void) {
         self.detector = detector
         self.callback = callback
         start()
@@ -25,7 +25,8 @@ final class HotKeyService {
             let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
             let isRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
             if service.detector.register(keyCode: keyCode, isRepeat: isRepeat) {
-                DispatchQueue.main.async { service.callback() }
+                let callback = service.callback
+                DispatchQueue.main.async { callback() }
             }
             return Unmanaged.passUnretained(event)
         }, userInfo: UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()))

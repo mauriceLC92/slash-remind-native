@@ -3,7 +3,7 @@ import Foundation
 import os.log
 #endif
 
-protocol RemindersAPI {
+protocol RemindersAPI: Sendable {
     func createReminder(text: String) async throws
 }
 
@@ -26,9 +26,16 @@ struct HTTPRemindersAPI: RemindersAPI {
     }
 }
 
-struct MockRemindersAPI: RemindersAPI {
-    var created: [String] = []
-    mutating func createReminder(text: String) async throws {
+actor MockRemindersAPI: RemindersAPI {
+    private var created: [String] = []
+    
+    func createReminder(text: String) async throws {
         created.append(text)
+    }
+    
+    var createdReminders: [String] {
+        get async {
+            return created
+        }
     }
 }

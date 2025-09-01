@@ -20,11 +20,11 @@ struct CommandPaletteView: View {
             }
             HStack(spacing: 4) {
                 Text("Type")
-                CapsuleBadge("#")
+                CapsuleBadge(text: "#")
                 Text("to access projects,")
-                CapsuleBadge(">")
+                CapsuleBadge(text: ">")
                 Text("for users, and")
-                CapsuleBadge("?")
+                CapsuleBadge(text: "?")
                 Text("for help.")
             }
             .font(.caption)

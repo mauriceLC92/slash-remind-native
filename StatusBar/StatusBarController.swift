@@ -1,6 +1,7 @@
 #if os(macOS)
 import AppKit
 
+@MainActor
 final class StatusBarController {
     private let statusItem: NSStatusItem
     private let paletteController: CommandPaletteWindowController

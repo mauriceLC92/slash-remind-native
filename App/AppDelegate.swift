@@ -16,8 +16,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let vm = PaletteViewModel(api: api, settings: settings, scheduler: scheduler)
         paletteController = CommandPaletteWindowController(viewModel: vm)
         statusBar = StatusBarController(paletteController: paletteController, settings: settings)
-        hotKeyService = HotKeyService { [weak self] in
-            self?.paletteController.toggle()
+        let controller = paletteController
+        hotKeyService = HotKeyService { @Sendable [weak controller] in
+            Task { @MainActor in
+                controller?.toggle()
+            }
         }
     }
 
@@ -32,7 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc func openPreferences(_ sender: Any?) {
+    @MainActor @objc func openPreferences(_ sender: Any?) {
         NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
     }
 }

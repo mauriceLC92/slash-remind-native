@@ -7,13 +7,13 @@ let package = Package(
         .macOS(.v13)
     ],
     products: [
-        .library(name: "SlashRemind", targets: ["SlashRemind"])
+        .executable(name: "SlashRemind", targets: ["SlashRemind"])
     ],
     targets: [
-        .target(
+        .executableTarget(
             name: "SlashRemind",
             path: ".",
-            exclude: ["README.md", ".gitignore", "Resources", "Tests"],
+            exclude: ["README.md", ".gitignore", "Resources", "Tests", "CLAUDE.md"],
             sources: ["App", "StatusBar", "Palette", "Services", "ViewModels", "Preferences", "Utilities"]
         ),
         .testTarget(
