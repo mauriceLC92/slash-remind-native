@@ -7,7 +7,8 @@ struct CommandPaletteView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "magnifyingglass")
-                TextField("Search…", text: $viewModel.text, onCommit: viewModel.submit)
+                TextField("Search…", text: $viewModel.text)
+                    .onSubmit(viewModel.submit)
                     .textFieldStyle(.plain)
             }
             .padding(12)

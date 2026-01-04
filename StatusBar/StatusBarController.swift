@@ -20,15 +20,26 @@ final class StatusBarController {
             button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         }
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Open Command Palette", action: #selector(openPalette), keyEquivalent: ""))
+        
+        let paletteItem = NSMenuItem(title: "Open Command Palette", action: #selector(openPalette), keyEquivalent: "")
+        paletteItem.target = self
+        menu.addItem(paletteItem)
+        
         let syncTitle = settings.syncEnabled ? "Pause Sync" : "Resume Sync"
-        menu.addItem(NSMenuItem(title: syncTitle, action: #selector(toggleSync), keyEquivalent: ""))
+        let syncItem = NSMenuItem(title: syncTitle, action: #selector(toggleSync), keyEquivalent: "")
+        syncItem.target = self
+        menu.addItem(syncItem)
+        
         menu.addItem(NSMenuItem.separator())
+        
         let prefsItem = NSMenuItem(title: "Preferences…", action: #selector(openPreferences), keyEquivalent: ",")
         prefsItem.keyEquivalentModifierMask = [.command]
+        prefsItem.target = self
         menu.addItem(prefsItem)
+        
         let quitItem = NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q")
         quitItem.keyEquivalentModifierMask = [.command]
+        quitItem.target = self
         menu.addItem(quitItem)
         statusItem.menu = menu
     }

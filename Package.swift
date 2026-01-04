@@ -13,7 +13,7 @@ let package = Package(
         .executableTarget(
             name: "SlashRemind",
             path: ".",
-            exclude: ["README.md", ".gitignore", "Resources", "Tests", "CLAUDE.md"],
+            exclude: ["README.md", ".gitignore", "Resources", "Tests", "CLAUDE.md", "Info.plist"],
             sources: ["App", "StatusBar", "Palette", "Services", "ViewModels", "Preferences", "Utilities"]
         ),
         .testTarget(
