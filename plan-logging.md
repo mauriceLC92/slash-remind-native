@@ -18,9 +18,9 @@ Currently, the app creates reminders in the native macOS Reminders app with hard
 | `Sendable` conformance for `DateParsing` protocol | Swift 6 strict concurrency enforced across codebase -> `RemindersAPI` already `Sendable` for cross-actor sharing -> `DateParsing` injected into `@MainActor` ViewModel -> protocol must be `Sendable` to allow safe sharing |
 | Remove backend HTTP API call | User explicitly stated "do not mind it not calling out to the back-end api" -> EventKit already creates native reminders successfully -> no network dependency simplifies error handling -> focus on local date parsing + EventKit integration |
 | Preserve existing EventKit permission handling | macOS 13/14 compatibility logic already implemented in `EventKitRemindersService` -> permissions granted and working per user statement -> no changes needed to authorization flow |
-| Return original date on DST edge case | `Calendar.date(bySettingHour:)` returns nil when specified time doesn't exist during DST transitions (e.g., 2:00 AM during spring-forward) -> returning nil would require fallback logic throughout system -> returning original parsed date (midnight) provides valid due date with minimal time error (3-9 hours depending on desired vs actual time) -> rare edge case (twice per year, specific time windows) doesn't justify complex fallback logic |
+| Return original date on DST edge case | `Calendar.date(bySettingHour:)` returns nil when specified time doesn't exist during DST transitions (e.g., 2:00 AM during spring-forward) -> returning nil would require fallback logic throughout system -> returning original parsed date (noon for date-only inputs) provides valid due date with minimal time error (3 hours from desired 9am) -> rare edge case (twice per year, specific time windows) doesn't justify complex fallback logic |
 | Reject reminder creation when parsing fails | User-specified requirement: "Reject with error message" when no date detected -> ensures all reminders have due dates -> prevents accidental creation of unscheduled reminders -> user must provide parseable date in input -> clear error feedback guides user to include date |
-| Midnight detection for date-only inputs | SoulverCore `dateValue` returns midnight (00:00:00) for date-only text per library testing -> no explicit API flag for date-only detection available -> midnight check is reliable indicator -> alternative (regex text parsing) would duplicate SoulverCore's parsing logic -> tests verify assumption holds |
+| Noon detection for date-only inputs | SoulverCore `dateValue` returns noon (12:00:00) for date-only text per library testing -> no explicit API flag for date-only detection available -> noon check is reliable indicator -> alternative (regex text parsing) would duplicate SoulverCore's parsing logic -> tests verify assumption holds |
 | Debug-level logging for parsing failures | Parsing failure triggers user-facing error (per "Reject reminder creation" policy) -> debug logging provides developer visibility for troubleshooting -> not an internal error condition (expected when user doesn't provide date) -> error-level would be misleading (no system failure occurred) -> info/error reserved for unexpected failures |
 | DateComponents year/month/day/hour/minute selection | EventKit `dueDateComponents` requires date+time for timed reminders -> second-precision unnecessary for reminder due dates -> calendar/timezone components omitted because `Calendar.current` establishes context -> EventKit inherits calendar/timezone from current user settings -> including explicit timezone might conflict with user's calendar preferences |
 | Synchronous SoulverCore parsing on MainActor | SoulverCore `String.dateValue` tested with sample inputs completes in <0.5ms -> no network or disk I/O per library architecture (pure parsing) -> safe to call synchronously on MainActor without UI freeze -> alternative (dispatch to background) adds complexity for negligible performance gain -> parsing must complete before API call or error display, so async provides no workflow benefit |
@@ -59,7 +59,7 @@ Currently, the app creates reminders in the native macOS Reminders app with hard
 | SoulverCore.xcframework binary compatibility with future macOS versions | Accepted: Binary framework maintained by Soulver team, widely used in production apps. If compatibility issue arises, can fallback to NSDataDetector or alternative library | N/A |
 | SoulverCore `dateValue` returns `nil` for unparseable input | User policy: Reject reminder creation with error message per Decision Log "Reject reminder creation when parsing fails" | ViewModels/PaletteViewModel.swift (M5 adds nil-check before API call) |
 | Removal of 5-minute alarm for existing behavior | M4 removes hardcoded 5-minute alarm. After change, only reminders with parsed dates have alarms. Users cannot create reminders without dates anymore (parsing failure blocks creation per user policy). Breaking change accepted: Date-based alarms are intended behavior, 5-minute alarm was placeholder | Services/RemindersAPI.swift:L46-49 (removed in M4) |
-| SoulverCore `dateValue` might not return midnight for date-only inputs | Assumption verified in M2 tests - if SoulverCore changes behavior, tests will fail and require alternative date-only detection method | Tests/DateParsingServiceTests.swift (created in M2) |
+| SoulverCore `dateValue` might not return noon for date-only inputs | Assumption verified in M2 tests - if SoulverCore changes behavior, tests will fail and require alternative date-only detection method | Tests/DateParsingServiceTests.swift (created in M2) |
 | Date parsing interprets past dates (e.g., "March 15" when March already passed) | SoulverCore automatically interprets ambiguous dates as future per library behavior. User can manually edit in Reminders app if incorrect | N/A |
 | 9:00 AM default may not match user's locale preferences | Accepted per user specification. Can add SettingsStore option later if requested | N/A |
 | Missing observability for date parsing failures | M2 adds `os_log` debug logging when `dateValue` returns nil, allowing developers to detect parsing failures | Services/DateParsingService.swift (created in M2) |
@@ -102,7 +102,7 @@ EKEventStore.save() --> macOS Reminders.app
 **Parsing Phase:**
 3. `DateParsingService.parseDate()` wraps SoulverCore's `String.dateValue`
 4. Returns `Date?` - nil if no date detected
-5. Date-only input (midnight) gets 9:00 AM time component added by DateParsingService
+5. Date-only input (noon) gets 9:00 AM time component added by DateParsingService
 
 **Storage Phase:**
 6. `EventKitRemindersService.createReminder()` receives text + optional Date
@@ -251,9 +251,9 @@ New file `Services/DateParsingService.swift`:
   - Call `text.dateValue` to get optional Date from SoulverCore (no try-catch needed, returns Optional)
   - If nil, log parsing failure using `os_log` with `.debug` level and return nil immediately
   - If Date exists, extract time components using Calendar API with explicit timezone handling
-  - Check if hour/minute/second components are all zero (midnight) indicating date-only input
-    - Note: SoulverCore date-only inputs verified to return midnight (00:00:00) in testing - if assumption breaks, tests will fail
-  - For date-only (midnight), use `Calendar.date(bySettingHour:minute:second:of:)` to set 9:00 AM preserving DST handling
+  - Check if hour is 12 and minute/second components are zero (noon) indicating date-only input
+    - Note: SoulverCore date-only inputs verified to return noon (12:00:00) in testing - if assumption breaks, tests will fail
+  - For date-only (noon), use `Calendar.date(bySettingHour:minute:second:of:)` to set 9:00 AM preserving DST handling
   - If `bySettingHour` returns nil (DST edge case when specified time doesn't exist), log DST fallback using `os_log` with `.debug` level and return original parsed date unchanged
   - Return modified Date (or original if DST edge case)
 - Decision references: "Service layer abstraction", "9:00 AM default for date-only inputs"
@@ -299,7 +299,7 @@ New file `Services/DateParsingService.swift`:
 +                return adjustedDate
 +            } else {
 +#if canImport(os)
-+                os_log("DST edge case: returning original midnight date", log: .services, type: .debug)
++                os_log("DST edge case: returning original noon date", log: .services, type: .debug)
 +#endif
 +                return parsedDate
 +            }

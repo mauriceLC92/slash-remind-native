@@ -7,5 +7,6 @@ extension OSLog {
     static let palette = OSLog(subsystem: subsystem, category: "palette")
     static let network = OSLog(subsystem: subsystem, category: "network")
     static let notifications = OSLog(subsystem: subsystem, category: "notifications")
+    static let services = OSLog(subsystem: subsystem, category: "services")
 }
 #endif

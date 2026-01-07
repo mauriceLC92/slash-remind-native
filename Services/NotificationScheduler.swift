@@ -5,6 +5,7 @@ import os.log
 
 struct Reminder {
     let text: String
+    let dueDate: Date?
 }
 
 protocol NotificationScheduling {

@@ -8,12 +8,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotKeyService: HotKeyService!
     let settings = SettingsStore()
     private let scheduler = NotificationScheduler()
-    private lazy var api: RemindersAPI = HTTPRemindersAPI(baseURL: URL(string: settings.baseURL)!)
+    private let api: RemindersAPI = EventKitRemindersService()
+    private let dateParser: DateParsing = SoulverDateParser()
     private var paletteController: CommandPaletteWindowController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         requestNotificationPermissionsIfNeeded()
-        let vm = PaletteViewModel(api: api, settings: settings, scheduler: scheduler)
+        let vm = PaletteViewModel(api: api, settings: settings, scheduler: scheduler, dateParser: dateParser)
         paletteController = CommandPaletteWindowController(viewModel: vm)
         statusBar = StatusBarController(paletteController: paletteController, settings: settings)
         let controller = paletteController

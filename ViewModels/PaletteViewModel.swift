@@ -12,11 +12,13 @@ final class PaletteViewModel: ObservableObject {
     private let api: RemindersAPI
     private let settings: SettingsStore
     private let scheduler: NotificationScheduling
+    private let dateParser: DateParsing
 
-    init(api: RemindersAPI, settings: SettingsStore, scheduler: NotificationScheduling) {
+    init(api: RemindersAPI, settings: SettingsStore, scheduler: NotificationScheduling, dateParser: DateParsing) {
         self.api = api
         self.settings = settings
         self.scheduler = scheduler
+        self.dateParser = dateParser
     }
 
     func submit() {
@@ -26,10 +28,16 @@ final class PaletteViewModel: ObservableObject {
         }
         isSubmitting = true
         let message = text
+        let parsedDate = dateParser.parseDate(from: message)
+        guard let parsedDate = parsedDate else {
+            self.error = "Please include a date or time (e.g., 'tomorrow at 9am')"
+            self.isSubmitting = false
+            return
+        }
         Task {
             do {
-                try await api.createReminder(text: message)
-                scheduler.schedule(Reminder(text: message))
+                try await api.createReminder(text: message, dueDate: parsedDate)
+                scheduler.schedule(Reminder(text: message, dueDate: parsedDate))
 #if os(macOS)
                 NSApp.keyWindow?.close()
 #endif
