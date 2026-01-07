@@ -1,88 +1,60 @@
-# CLAUDE.md
+# Slash Remind Native
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+macOS menu bar app for creating reminders via command palette (double-press `/` hotkey).
 
-## Project Status and Current State
+## Files
 
-**IMPORTANT**: This Swift Package Manager project has been **migrated to a proper Xcode project** located at `/Users/mauricelecordier/Documents/SlashRemindApp/`. The SPM version in this repository serves as the source of truth for code but **cannot run properly** due to macOS app bundle requirements.
+| File | What | When to read |
+| ---- | ---- | ------------ |
+| `README.md` | Architecture, Swift 6 concurrency patterns, design decisions | Understanding project structure, adding features, debugging concurrency issues |
+| `AGENTS.md` | Repository guidelines for AI assistants | Understanding project conventions, coding style, build commands |
+| `Package.swift` | SPM package definition | Modifying dependencies, build targets, platform requirements |
+| `Makefile` | Xcode build wrapper commands | Running build, test, release commands |
 
-### Why This Migration Happened
-macOS apps using UserNotifications framework require proper app bundle structure with Info.plist files. Swift Package Manager cannot create these bundles, causing runtime errors: `bundleProxyForCurrentProcess is nil`.
+## Subdirectories
 
-## Build and Development Commands
+| Directory | What | When to read |
+| --------- | ---- | ------------ |
+| `App/` | Application entry point and AppDelegate | Modifying app lifecycle, service initialization, dependency wiring |
+| `StatusBar/` | Menu bar UI controller | Changing menu bar appearance, adding menu items, handling menu actions |
+| `Palette/` | Command palette window and double-press detection | Modifying palette UI, adjusting hotkey detection, changing window behavior |
+| `Services/` | Core business logic (API, hotkeys, notifications, settings) | Adding services, modifying hotkey capture, changing API behavior, settings management |
+| `ViewModels/` | SwiftUI view models | Modifying palette view logic, adding reactive properties |
+| `Preferences/` | Settings/preferences UI | Changing preferences window, adding settings options |
+| `Utilities/` | Shared utilities and logging | Adding logging categories, creating shared helpers |
+| `Tests/` | XCTest unit tests | Adding tests, understanding test patterns, debugging test failures |
+| `Resources/` | Assets and Info.plist | Modifying app icons, bundle configuration, asset management |
+| `SlashRemindApp/` | Xcode project directory (not actively used) | - |
 
-### For Active Development (Xcode Project)
-- **Primary Development**: Use the Xcode project at `/Users/mauricelecordier/Documents/SlashRemindApp/`
-- **Build and Run**: Open project in Xcode 15+ and press ⌘+R
-- **All functionality works**: Menu bar, global hotkey, notifications, preferences
+## Build
 
-### For Code Testing and Verification (SPM)
-- **Build Only**: `swift build` - Verifies compilation but app cannot run
-- **All Tests**: `swift test` - Unit tests work fine in SPM
-- **Specific Test**: `swift test --filter DoublePressDetectorTests`
+**Xcode (Primary)**:
+```bash
+make build          # Debug build
+make run            # Build and launch
+make test           # Run tests
+make release        # Release build
+```
 
-### Package Management
-- **Resolve Dependencies**: `swift package resolve`  
-- **Update Dependencies**: `swift package update`
-- **Note**: SPM commands work for development but not runtime
+**Swift Package Manager (verification only)**:
+```bash
+swift build         # Verify compilation
+swift test          # Run unit tests
+```
 
-## Architecture Overview
+Note: SPM builds successfully but the app cannot run without proper Xcode app bundle structure. See README.md for SPM vs Xcode distinction.
 
-### Core Application Structure
-- **App/AppDelegate.swift**: NSApplicationDelegate that coordinates all major services and UI components
-- **SlashRemindApp.swift**: SwiftUI main app entry point (in Xcode project, not SPM)
-- **Info.plist**: Proper app bundle configuration with `LSUIElement=true` for menu bar app
+## Test
 
-### Swift 6 Concurrency Architecture
-The app has been fully updated for Swift 6 strict concurrency with these patterns:
+```bash
+swift test                                    # All tests
+swift test --filter DoublePressDetectorTests  # Specific test
+make test                                     # Via Xcode
+```
 
-1. **MainActor Isolation**: UI components properly isolated (`@MainActor` on StatusBarController, AppDelegate methods)
-2. **Sendable Protocols**: `RemindersAPI` is `Sendable`, `MockRemindersAPI` is an `actor`
-3. **Safe Callback Patterns**: HotKeyService uses `@Sendable` closures to prevent data races
-4. **Modern SwiftUI**: TextField uses `onSubmit` instead of deprecated `onCommit`
+## Development
 
-### Key Architecture Patterns
-1. **Dependency Injection**: Services are injected through the AppDelegate and passed to UI components
-2. **Observable Objects**: Settings and ViewModels use `@Published` properties for reactive UI updates  
-3. **Protocol-Based API**: `RemindersAPI` protocol allows for both HTTP and mock implementations
-4. **Global Event Handling**: HotKeyService uses CGEvent tap for system-wide key capture
-
-### Directory Structure
-- **App/**: Application entry points and main coordinator
-- **StatusBar/**: Menu bar UI and controller
-- **Palette/**: Command palette window, view, and double-press detection logic
-- **Services/**: Core business logic (API, hotkeys, notifications, settings)
-- **ViewModels/**: SwiftUI view models following MVVM pattern
-- **Preferences/**: Settings/preferences UI
-- **Utilities/**: Shared utilities and logging categories
-- **Tests/**: XCTest unit tests
-
-### Key Services Integration
-- **HotKeyService**: Manages global event tap with `@Sendable` callback integration to DoublePressDetector
-- **RemindersAPI**: `Sendable` HTTP client with protocol abstraction (`MockRemindersAPI` as `actor`)
-- **SettingsStore**: Observable UserDefaults wrapper for app configuration
-- **NotificationScheduler**: Handles local notifications when sync is enabled
-
-### Critical Components
-- **DoublePressDetector**: Configurable key detection (default: `/` key, 0.3s threshold)
-- **CommandPaletteWindowController**: `@MainActor` isolated window lifecycle and positioning
-- **StatusBarController**: `@MainActor` isolated menu bar with explicit NSMenuItem targets
-
-## Platform and Permissions
-
-### Requirements
-- **Platform**: macOS 13+ only (`#if os(macOS)` guards throughout)
-- **Swift Tools Version**: 6.1
-- **Input Monitoring**: Required for global hotkey (prompts user for accessibility permissions)
-- **Notifications**: Requested when sync is enabled
-
-### Key Implementation Details
-- Uses `CGEvent.tapCreate` for global key capture requiring accessibility permissions
-- Menu bar app with no dock presence
-- SwiftUI for preferences, AppKit for core functionality
-- Logging via `os.log` with custom categories (see Utilities/OSLog+Categories.swift)
-
-## Testing Strategy
-- Unit tests focus on core logic: `DoublePressDetector` and `RemindersAPI`  
-- Tests use XCTest framework with `@testable import SlashRemind`
-- Mock implementations available for API testing (MockRemindersAPI)
+- **Platform**: macOS 13+, Swift 6.1
+- **Xcode Project**: `/Users/mauricelecordier/Documents/SlashRemindApp/` (required for running)
+- **Permissions**: Accessibility (global hotkey), Notifications (when sync enabled)
+- **Concurrency**: Swift 6 strict mode (`@MainActor`, `Sendable`, `actor`)
