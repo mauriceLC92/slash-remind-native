@@ -1,0 +1,58 @@
+› I use the make build and make run command. So the source of truth for code is whatever works builds and run in that code. Does that make
+    sense. so whatever code is used for that to build and run is what I want to keep plus anything else needed so I cant just continue working on theis projecct. Can you
+  derive a plan for that
+
+
+◦
+
+• That makes sense. If make build/make run defines truth, then the canonical code is currently the Xcode project referenced by Makefile.
+  Plan is to make that project local to this repo so one folder is enough.
+
+  Plan
+
+  1. Define canonical target
+
+  - Canonical project: the one Makefile builds and runs (SlashRemind scheme).
+  - Goal state: same behavior, but fully inside this repo (no ../SlashRemindApp/... dependency).
+
+  2. Import real Xcode project into this repo
+
+  - Copy in the real SlashRemind.xcodeproj and required app metadata folder (SlashRemind/Info.plist, entitlements).
+  - Remove/replace the current in-repo SlashRemindApp/ stub.
+
+  3. Repoint project file paths to in-repo source
+
+  - Ensure target source references point to this repo’s folders: App/, Services/, Palette/, ViewModels/, Preferences/, StatusBar/, Utilities/, Resources/, Tests/.
+  - Resolve known drift files (RemindersAPI.swift, HotKeyService.swift, SettingsStore.swift, PaletteViewModel.swift, etc.) with one final merged version.
+
+  4. Update Makefile to local paths
+
+  - Change XCODE_PROJECT from ../SlashRemindApp/... to the in-repo .xcodeproj path.
+  - Keep SCHEME := SlashRemind.
+
+  5. Validate end-to-end
+
+  - Run: make clean, make build, make test, make run.
+  - Confirm app behavior uses edits from this repo immediately (no manual sync).
+
+  6. Clean up dual-repo debt
+
+  - Remove docs that describe dual-repo workflow.
+  - Archive/delete external sibling repo only after successful local validation.
+
+  7. Add guardrails
+
+  - Add CI check or local check: fail if rg "../SlashRemindApp" finds references.
+  - Update contributor docs to state single-repo workflow only.
+
+  Done criteria
+
+  - make build and make run work from this repo.
+  - No path reference to external sibling repo.
+  - Editing files in this repo is enough to build/run/test the app.
+
+  If you want, I can execute this migration now in small, reversible commits.
+
+
+
+  › Read REPOSITORY-STRUCTURE.md and based on this codebase what is the way forward such that I can jiust keep the one correct project folder in this repo

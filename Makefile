@@ -19,8 +19,15 @@ release:
 
 run: build
 	@echo "Launching SlashRemind..."
-	@open ~/Library/Developer/Xcode/DerivedData/SlashRemind-*/Build/Products/Debug/SlashRemind.app || \
-		echo "Error: Could not find built app. Try 'make build' first."
+	# Important: multiple SlashRemind DerivedData folders can exist.
+	# Opening all glob matches launches multiple app instances (duplicate menu bar icons).
+	# Pick the newest app bundle only.
+	@APP_PATH="$$(ls -td $$HOME/Library/Developer/Xcode/DerivedData/SlashRemind-*/Build/Products/Debug/SlashRemind.app 2>/dev/null | head -n 1)"; \
+	if [ -n "$$APP_PATH" ]; then \
+		open "$$APP_PATH"; \
+	else \
+		echo "Error: Could not find built app. Try 'make build' first."; \
+	fi
 
 clean:
 	xcodebuild -project $(XCODE_PROJECT) -scheme $(SCHEME) clean
