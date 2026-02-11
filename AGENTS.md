@@ -1,36 +1,46 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `App/` application entry points and main coordinator (`AppDelegate`).
-- `StatusBar/`, `Palette/`, `Preferences/` UI for the menu bar, command palette, and settings.
-- `Services/` core logic (hotkey capture, reminders API, notifications, settings store).
-- `ViewModels/` SwiftUI view models; `Utilities/` shared helpers and logging.
-- `Resources/` and `Info.plist` for assets and bundle configuration.
-- `Tests/` XCTest targets (e.g., `Tests/DoublePressDetectorTests.swift`).
-- `SlashRemindApp/` Xcode project assets are present, but active development targets the external Xcode project at `/Users/mauricelecordier/Documents/SlashRemindApp/` per `CLAUDE.md`.
+This repository is the Swift Package source of truth for SlashRemind (macOS 13+, Swift 6.1).
+
+- `App/`: app lifecycle and dependency wiring (`AppDelegate`)
+- `StatusBar/`: menu bar controller and menu actions
+- `Palette/`: command palette UI, window controller, double-press detector
+- `Services/`: API, hotkey capture, notifications, settings
+- `ViewModels/`: SwiftUI-facing state and command handling
+- `Preferences/`: preferences window and settings UI
+- `Utilities/`: shared helpers and logging categories
+- `Tests/`: XCTest unit tests
+- `Resources/`: plist and assets
 
 ## Build, Test, and Development Commands
-- Xcode (preferred): open the external project and run the `SlashRemind` scheme (Xcode 15+, macOS 13+).
-- Makefile (wraps Xcode): `make build`, `make run`, `make test`, `make release` (paths assume `../SlashRemindApp/SlashRemind/SlashRemind.xcodeproj`).
-- SwiftPM (build/test only): `swift build`, `swift test`, `swift test --filter DoublePressDetectorTests`.
-- Dependencies: `swift package resolve` or `swift package update`.
-- Note: SPM builds but the app cannot run properly without a full app bundle.
+- `swift build`: compile package targets.
+- `swift test`: run all XCTest suites in `Tests/`.
+- `swift test --filter DateParsingServiceTests`: run a single suite.
+- `make build`: Debug build via `xcodebuild` (external Xcode project path in `Makefile`).
+- `make test`: run tests through Xcode build tooling.
+- `make run`: build and open the app bundle.
+
+Use `swift build`/`swift test` for fast validation; use `make` targets for app-bundle workflows.
 
 ## Coding Style & Naming Conventions
-- Swift 6 strict concurrency patterns are in use: `@MainActor` for UI, `Sendable` protocols, `actor` for mock services.
-- Indentation is 4 spaces; keep Swift standard formatting (no repo-wide formatter config).
-- Naming: UpperCamelCase for types (`StatusBarController`), lowerCamelCase for properties/functions (`openPreferences`).
-- Keep logging in `os.log` categories (`Utilities/OSLog+Categories.swift`).
+- Follow existing Swift style: 4-space indentation, concise methods, small focused types.
+- Naming: `PascalCase` for types, `lowerCamelCase` for vars/functions, `test...` for test methods.
+- Keep UI-facing code `@MainActor` where appropriate.
+- Preserve Swift 6 concurrency safety (`Sendable`, actors, safe async boundaries).
+- No formatter/linter is configured here; match surrounding file style exactly.
 
 ## Testing Guidelines
-- XCTest in `Tests/`, with filenames ending in `Tests.swift`.
-- Focus on core logic (double-press detection, API behavior). Run `swift test` or `make test`.
+- Framework: XCTest (`@testable import SlashRemind`).
+- Place tests in `Tests/` with filename pattern `*Tests.swift`.
+- Prefer deterministic unit tests; mock services instead of real network/event-tap behavior.
+- For behavior changes, add happy-path and invalid-input coverage before opening a PR.
 
 ## Commit & Pull Request Guidelines
-- History uses short, plain-sentence subjects, often lower-case and imperative-ish (e.g., `add makefile to run build from command line`).
-- Keep commit subjects concise and descriptive; avoid prefixes unless necessary.
-- PRs: include a summary of behavior changes, link issues if relevant, and add screenshots/GIFs for UI tweaks.
+- Current history uses short, task-focused subjects (for example: `add makefile...`, `Initial ...`).
+- Keep commit subjects imperative and specific; one logical change per commit.
+- PRs should include what changed and why, commands run (`swift test`, `make build`, etc.), screenshots/video for menu bar or palette UI changes, and linked issues/tasks when applicable.
 
-## Security & Configuration Notes
-- macOS 13+ only; global hotkey relies on Accessibility/Input Monitoring permissions.
-- Notifications permission is requested when sync is enabled; test permission flows when changing related code.
+## Security & Configuration Tips
+- Do not commit secrets, API tokens, or machine-specific credentials.
+- If changing permissions-related behavior (Accessibility/Notifications), update `Info.plist` and document manual verification steps.

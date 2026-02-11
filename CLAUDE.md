@@ -1,34 +1,14 @@
-# Slash Remind Native
+# CLAUDE.md
 
-macOS menu bar app for creating reminders via command palette (double-press `/` hotkey).
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Files
+## What This Is
 
-| File | What | When to read |
-| ---- | ---- | ------------ |
-| `README.md` | Architecture, Swift 6 concurrency patterns, design decisions | Understanding project structure, adding features, debugging concurrency issues |
-| `AGENTS.md` | Repository guidelines for AI assistants | Understanding project conventions, coding style, build commands |
-| `Package.swift` | SPM package definition | Modifying dependencies, build targets, platform requirements |
-| `Makefile` | Xcode build wrapper commands | Running build, test, release commands |
+macOS menu bar app that creates native Apple Reminders via a Spotlight-style command palette. Double-press `/` anywhere on macOS to open the palette, type a natural language reminder (must include a date/time), and hit Return.
 
-## Subdirectories
+## Build & Test
 
-| Directory | What | When to read |
-| --------- | ---- | ------------ |
-| `App/` | Application entry point and AppDelegate | Modifying app lifecycle, service initialization, dependency wiring |
-| `StatusBar/` | Menu bar UI controller | Changing menu bar appearance, adding menu items, handling menu actions |
-| `Palette/` | Command palette window and double-press detection | Modifying palette UI, adjusting hotkey detection, changing window behavior |
-| `Services/` | Core business logic (API, hotkeys, notifications, settings) | Adding services, modifying hotkey capture, changing API behavior, settings management |
-| `ViewModels/` | SwiftUI view models | Modifying palette view logic, adding reactive properties |
-| `Preferences/` | Settings/preferences UI | Changing preferences window, adding settings options |
-| `Utilities/` | Shared utilities and logging | Adding logging categories, creating shared helpers |
-| `Tests/` | XCTest unit tests | Adding tests, understanding test patterns, debugging test failures |
-| `Resources/` | Assets and Info.plist | Modifying app icons, bundle configuration, asset management |
-| `SlashRemindApp/` | Xcode project directory (not actively used) | - |
-
-## Build
-
-**Xcode (Primary)**:
+**Xcode (primary — required to run the app)**:
 ```bash
 make build          # Debug build
 make run            # Build and launch
@@ -36,25 +16,56 @@ make test           # Run tests
 make release        # Release build
 ```
 
-**Swift Package Manager (verification only)**:
+**Swift Package Manager (compilation/test only — cannot produce runnable app bundle)**:
 ```bash
-swift build         # Verify compilation
-swift test          # Run unit tests
-```
-
-Note: SPM builds successfully but the app cannot run without proper Xcode app bundle structure. See README.md for SPM vs Xcode distinction.
-
-## Test
-
-```bash
+swift build                                   # Verify compilation
 swift test                                    # All tests
-swift test --filter DoublePressDetectorTests  # Specific test
-make test                                     # Via Xcode
+swift test --filter DoublePressDetectorTests  # Single test class
 ```
 
-## Development
+SPM builds succeed but the app requires a proper Xcode app bundle (Info.plist, LSUIElement, entitlements) to run. The Xcode project lives at `../SlashRemindApp/SlashRemind/SlashRemind.xcodeproj`.
 
-- **Platform**: macOS 13+, Swift 6.1
-- **Xcode Project**: `/Users/mauricelecordier/Documents/SlashRemindApp/` (required for running)
-- **Permissions**: Accessibility (global hotkey), Notifications (when sync enabled)
-- **Concurrency**: Swift 6 strict mode (`@MainActor`, `Sendable`, `actor`)
+## Architecture
+
+### Dependency Flow
+
+```
+AppDelegate (creates all services, wires dependencies)
+  ├── SettingsStore (UserDefaults, @Published)
+  ├── EventKitRemindersService (implements RemindersAPI protocol)
+  ├── SoulverDateParser (implements DateParsing protocol)
+  ├── NotificationScheduler (implements NotificationScheduling protocol)
+  ├── PaletteViewModel (receives all services via constructor injection)
+  │     └── CommandPaletteWindowController (SwiftUI palette window)
+  ├── StatusBarController (menu bar icon + menu)
+  └── HotKeyService (CGEvent tap → toggles palette)
+```
+
+All services are protocol-based (`RemindersAPI`, `DateParsing`, `NotificationScheduling`) for testability. `MockRemindersAPI` is an `actor` for thread-safe test isolation.
+
+### Reminder Creation Pipeline
+
+User input → `SoulverDateParser` extracts date via SoulverCore's `String.dateValue` → `EventKitRemindersService` creates `EKReminder` with due date and alarm via EventKit → `NotificationScheduler` logs scheduling. If no date is parsed from input, submission is rejected with an error message.
+
+### Key Concurrency Patterns (Swift 6 strict mode)
+
+- **`@MainActor`**: All UI components (`StatusBarController`, `CommandPaletteWindowController`, `PaletteViewModel`, AppDelegate UI methods)
+- **`@Sendable` closures**: `HotKeyService` callback bridges CGEvent tap (C callback) to main thread via `DispatchQueue.main.async`
+- **`@unchecked Sendable`**: Used for `EventKitRemindersService` (EKEventStore is thread-safe per Apple docs) and `SoulverDateParser` (stateless pure function)
+- **`Unmanaged` pointer**: `HotKeyService` passes `self` to C callback via `Unmanaged.passUnretained`
+
+### Global Hotkey Mechanism
+
+`HotKeyService` → `CGEvent.tapCreate(.listenOnly)` captures all keyDown events system-wide → `DoublePressDetector` checks if `/` was pressed twice within 0.3s threshold → triggers palette toggle. Requires Accessibility/Input Monitoring permission. `CGEvent.tapCreate` chosen over `NSEvent.addGlobalMonitorForEvents` because the latter cannot capture events for the current app.
+
+### Date Parsing Quirk
+
+`SoulverDateParser` adjusts noon (12:00:00) results to 9:00 AM — when SoulverCore returns exactly noon it typically means no specific time was given, so 9 AM is used as a sensible default.
+
+## Coding Conventions
+
+- Swift 6.1, macOS 13+ (`#if os(macOS)` guards on platform-specific code, `#if canImport(os)` for os.log)
+- 4-space indentation, standard Swift naming (UpperCamelCase types, lowerCamelCase members)
+- Logging via `os_log` with categories defined in `Utilities/OSLog+Categories.swift`
+- Commit messages: short, plain-sentence, lowercase, imperative-ish (e.g., `add makefile to run build from command line`)
+- App runs as menu bar only (`LSUIElement=true`), no Dock presence
