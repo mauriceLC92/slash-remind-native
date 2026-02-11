@@ -2,11 +2,7 @@ import Foundation
 
 final class SettingsStore: ObservableObject {
     private enum Keys: String {
-        case baseURL, syncEnabled
-    }
-
-    @Published var baseURL: String {
-        didSet { UserDefaults.standard.set(baseURL, forKey: Keys.baseURL.rawValue) }
+        case syncEnabled
     }
 
     @Published var syncEnabled: Bool {
@@ -14,7 +10,6 @@ final class SettingsStore: ObservableObject {
     }
 
     init() {
-        baseURL = UserDefaults.standard.string(forKey: Keys.baseURL.rawValue) ?? "https://example.com"
         syncEnabled = UserDefaults.standard.object(forKey: Keys.syncEnabled.rawValue) as? Bool ?? true
     }
 }

@@ -1,0 +1,731 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		546D2C332E6714C000456B16 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C262E6714C000456B16 /* CommandPaletteView.swift */; };
+		546D2C342E6714C000456B16 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C242E6714C000456B16 /* AppDelegate.swift */; };
+		546D2C352E6714C000456B16 /* DoublePressDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C282E6714C000456B16 /* DoublePressDetector.swift */; };
+		546D2C362E6714C000456B16 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C2D2E6714C000456B16 /* SettingsStore.swift */; };
+		546D2C372E6714C000456B16 /* HotKeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C2A2E6714C000456B16 /* HotKeyService.swift */; };
+		546D2C382E6714C000456B16 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C2F2E6714C000456B16 /* StatusBarController.swift */; };
+		546D2C392E6714C000456B16 /* RemindersAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C2C2E6714C000456B16 /* RemindersAPI.swift */; };
+		546D2C3A2E6714C000456B16 /* OSLog+Categories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C312E6714C000456B16 /* OSLog+Categories.swift */; };
+		546D2C3B2E6714C000456B16 /* CommandPaletteWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C272E6714C000456B16 /* CommandPaletteWindowController.swift */; };
+		546D2C3C2E6714C000456B16 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C2B2E6714C000456B16 /* NotificationScheduler.swift */; };
+		546D2C432E6714E100456B16 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 546D2C3F2E6714E100456B16 /* Assets.xcassets */; };
+		546D2C442E6714E100456B16 /* PreferencesWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C3D2E6714E100456B16 /* PreferencesWindow.swift */; };
+		546D2C462E6714FA00456B16 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 546D2C452E6714FA00456B16 /* Info.plist */; };
+		546D2C492E67150E00456B16 /* PaletteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C472E67150E00456B16 /* PaletteViewModel.swift */; };
+		546D2C4B2E67153800456B16 /* SlashRemindApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C4A2E67153800456B16 /* SlashRemindApp.swift */; };
+		546D2C4E2E67180000456B16 /* EventKitRemindersService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546D2C4D2E67180000456B16 /* EventKitRemindersService.swift */; };
+		54B78E5E2F0EEA02000F1F6D /* DateParsingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B78E5D2F0EEA02000F1F6D /* DateParsingService.swift */; };
+		54B78E602F0EEA63000F1F6D /* SoulverCore in Frameworks */ = {isa = PBXBuildFile; productRef = 54B78E5F2F0EEA63000F1F6D /* SoulverCore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		546D2C082E67141D00456B16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 546D2BF12E67141B00456B16 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 546D2BF82E67141B00456B16;
+			remoteInfo = SlashRemind;
+		};
+		546D2C122E67141D00456B16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 546D2BF12E67141B00456B16 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 546D2BF82E67141B00456B16;
+			remoteInfo = SlashRemind;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		546D2BF92E67141B00456B16 /* SlashRemind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SlashRemind.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		546D2C072E67141D00456B16 /* SlashRemindTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SlashRemindTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		546D2C112E67141D00456B16 /* SlashRemindUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SlashRemindUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		546D2C242E6714C000456B16 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		546D2C262E6714C000456B16 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
+		546D2C272E6714C000456B16 /* CommandPaletteWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteWindowController.swift; sourceTree = "<group>"; };
+		546D2C282E6714C000456B16 /* DoublePressDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoublePressDetector.swift; sourceTree = "<group>"; };
+		546D2C2A2E6714C000456B16 /* HotKeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyService.swift; sourceTree = "<group>"; };
+		546D2C2B2E6714C000456B16 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
+		546D2C2C2E6714C000456B16 /* RemindersAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersAPI.swift; sourceTree = "<group>"; };
+		546D2C2D2E6714C000456B16 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		546D2C2F2E6714C000456B16 /* StatusBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
+		546D2C312E6714C000456B16 /* OSLog+Categories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OSLog+Categories.swift"; sourceTree = "<group>"; };
+		546D2C3D2E6714E100456B16 /* PreferencesWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesWindow.swift; sourceTree = "<group>"; };
+		546D2C3F2E6714E100456B16 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		546D2C402E6714E100456B16 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		546D2C452E6714FA00456B16 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		546D2C472E67150E00456B16 /* PaletteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteViewModel.swift; sourceTree = "<group>"; };
+		546D2C4A2E67153800456B16 /* SlashRemindApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlashRemindApp.swift; sourceTree = "<group>"; };
+		546D2C4D2E67180000456B16 /* EventKitRemindersService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventKitRemindersService.swift; sourceTree = "<group>"; };
+		54B78E5D2F0EEA02000F1F6D /* DateParsingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateParsingService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		546D2C4D2E6716EC00456B16 /* Exceptions for "SlashRemind" folder in "SlashRemind" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 546D2BF82E67141B00456B16 /* SlashRemind */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		546D2BFB2E67141B00456B16 /* SlashRemind */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				546D2C4D2E6716EC00456B16 /* Exceptions for "SlashRemind" folder in "SlashRemind" target */,
+			);
+			path = SlashRemind;
+			sourceTree = "<group>";
+		};
+		546D2C0A2E67141D00456B16 /* SlashRemindTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SlashRemindTests;
+			sourceTree = "<group>";
+		};
+		546D2C142E67141D00456B16 /* SlashRemindUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SlashRemindUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		546D2BF62E67141B00456B16 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				54B78E602F0EEA63000F1F6D /* SoulverCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		546D2C042E67141D00456B16 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		546D2C0E2E67141D00456B16 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		546D2BF02E67141B00456B16 = {
+			isa = PBXGroup;
+			children = (
+				546D2C482E67150E00456B16 /* ViewModels */,
+				546D2BFB2E67141B00456B16 /* SlashRemind */,
+				546D2C0A2E67141D00456B16 /* SlashRemindTests */,
+				546D2C142E67141D00456B16 /* SlashRemindUITests */,
+				546D2BFA2E67141B00456B16 /* Products */,
+				546D2C252E6714C000456B16 /* App */,
+				546D2C292E6714C000456B16 /* Palette */,
+				546D2C2E2E6714C000456B16 /* Services */,
+				546D2C302E6714C000456B16 /* StatusBar */,
+				546D2C322E6714C000456B16 /* Utilities */,
+				546D2C3E2E6714E100456B16 /* Preferences */,
+				546D2C412E6714E100456B16 /* Resources */,
+				546D2C452E6714FA00456B16 /* Info.plist */,
+				546D2C4A2E67153800456B16 /* SlashRemindApp.swift */,
+			);
+			sourceTree = "<group>";
+		};
+		546D2BFA2E67141B00456B16 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				546D2BF92E67141B00456B16 /* SlashRemind.app */,
+				546D2C072E67141D00456B16 /* SlashRemindTests.xctest */,
+				546D2C112E67141D00456B16 /* SlashRemindUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		546D2C252E6714C000456B16 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				546D2C242E6714C000456B16 /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		546D2C292E6714C000456B16 /* Palette */ = {
+			isa = PBXGroup;
+			children = (
+				546D2C262E6714C000456B16 /* CommandPaletteView.swift */,
+				546D2C272E6714C000456B16 /* CommandPaletteWindowController.swift */,
+				546D2C282E6714C000456B16 /* DoublePressDetector.swift */,
+			);
+			path = Palette;
+			sourceTree = "<group>";
+		};
+		546D2C2E2E6714C000456B16 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				54B78E5D2F0EEA02000F1F6D /* DateParsingService.swift */,
+				546D2C2A2E6714C000456B16 /* HotKeyService.swift */,
+				546D2C2B2E6714C000456B16 /* NotificationScheduler.swift */,
+				546D2C2C2E6714C000456B16 /* RemindersAPI.swift */,
+				546D2C2D2E6714C000456B16 /* SettingsStore.swift */,
+				546D2C4D2E67180000456B16 /* EventKitRemindersService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		546D2C302E6714C000456B16 /* StatusBar */ = {
+			isa = PBXGroup;
+			children = (
+				546D2C2F2E6714C000456B16 /* StatusBarController.swift */,
+			);
+			path = StatusBar;
+			sourceTree = "<group>";
+		};
+		546D2C322E6714C000456B16 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				546D2C312E6714C000456B16 /* OSLog+Categories.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		546D2C3E2E6714E100456B16 /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+				546D2C3D2E6714E100456B16 /* PreferencesWindow.swift */,
+			);
+			path = Preferences;
+			sourceTree = "<group>";
+		};
+		546D2C412E6714E100456B16 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				546D2C3F2E6714E100456B16 /* Assets.xcassets */,
+				546D2C402E6714E100456B16 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		546D2C482E67150E00456B16 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				546D2C472E67150E00456B16 /* PaletteViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		546D2BF82E67141B00456B16 /* SlashRemind */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 546D2C1B2E67141D00456B16 /* Build configuration list for PBXNativeTarget "SlashRemind" */;
+			buildPhases = (
+				546D2BF52E67141B00456B16 /* Sources */,
+				546D2BF62E67141B00456B16 /* Frameworks */,
+				546D2BF72E67141B00456B16 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				546D2BFB2E67141B00456B16 /* SlashRemind */,
+			);
+			name = SlashRemind;
+			packageProductDependencies = (
+				54B78E5F2F0EEA63000F1F6D /* SoulverCore */,
+			);
+			productName = SlashRemind;
+			productReference = 546D2BF92E67141B00456B16 /* SlashRemind.app */;
+			productType = "com.apple.product-type.application";
+		};
+		546D2C062E67141D00456B16 /* SlashRemindTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 546D2C1E2E67141D00456B16 /* Build configuration list for PBXNativeTarget "SlashRemindTests" */;
+			buildPhases = (
+				546D2C032E67141D00456B16 /* Sources */,
+				546D2C042E67141D00456B16 /* Frameworks */,
+				546D2C052E67141D00456B16 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				546D2C092E67141D00456B16 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				546D2C0A2E67141D00456B16 /* SlashRemindTests */,
+			);
+			name = SlashRemindTests;
+			packageProductDependencies = (
+			);
+			productName = SlashRemindTests;
+			productReference = 546D2C072E67141D00456B16 /* SlashRemindTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		546D2C102E67141D00456B16 /* SlashRemindUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 546D2C212E67141D00456B16 /* Build configuration list for PBXNativeTarget "SlashRemindUITests" */;
+			buildPhases = (
+				546D2C0D2E67141D00456B16 /* Sources */,
+				546D2C0E2E67141D00456B16 /* Frameworks */,
+				546D2C0F2E67141D00456B16 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				546D2C132E67141D00456B16 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				546D2C142E67141D00456B16 /* SlashRemindUITests */,
+			);
+			name = SlashRemindUITests;
+			packageProductDependencies = (
+			);
+			productName = SlashRemindUITests;
+			productReference = 546D2C112E67141D00456B16 /* SlashRemindUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		546D2BF12E67141B00456B16 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					546D2BF82E67141B00456B16 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					546D2C062E67141D00456B16 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 546D2BF82E67141B00456B16;
+					};
+					546D2C102E67141D00456B16 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 546D2BF82E67141B00456B16;
+					};
+				};
+			};
+			buildConfigurationList = 546D2BF42E67141B00456B16 /* Build configuration list for PBXProject "SlashRemind" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 546D2BF02E67141B00456B16;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5461B6A32F0ED9C600E2E6B8 /* XCRemoteSwiftPackageReference "SoulverCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 546D2BFA2E67141B00456B16 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				546D2BF82E67141B00456B16 /* SlashRemind */,
+				546D2C062E67141D00456B16 /* SlashRemindTests */,
+				546D2C102E67141D00456B16 /* SlashRemindUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		546D2BF72E67141B00456B16 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				546D2C432E6714E100456B16 /* Assets.xcassets in Resources */,
+				546D2C462E6714FA00456B16 /* Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		546D2C052E67141D00456B16 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		546D2C0F2E67141D00456B16 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		546D2BF52E67141B00456B16 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				546D2C492E67150E00456B16 /* PaletteViewModel.swift in Sources */,
+				546D2C4B2E67153800456B16 /* SlashRemindApp.swift in Sources */,
+				546D2C332E6714C000456B16 /* CommandPaletteView.swift in Sources */,
+				546D2C342E6714C000456B16 /* AppDelegate.swift in Sources */,
+				546D2C352E6714C000456B16 /* DoublePressDetector.swift in Sources */,
+				546D2C362E6714C000456B16 /* SettingsStore.swift in Sources */,
+				546D2C372E6714C000456B16 /* HotKeyService.swift in Sources */,
+				546D2C382E6714C000456B16 /* StatusBarController.swift in Sources */,
+				546D2C392E6714C000456B16 /* RemindersAPI.swift in Sources */,
+				546D2C3A2E6714C000456B16 /* OSLog+Categories.swift in Sources */,
+				546D2C3B2E6714C000456B16 /* CommandPaletteWindowController.swift in Sources */,
+				546D2C3C2E6714C000456B16 /* NotificationScheduler.swift in Sources */,
+				546D2C442E6714E100456B16 /* PreferencesWindow.swift in Sources */,
+				546D2C4E2E67180000456B16 /* EventKitRemindersService.swift in Sources */,
+				54B78E5E2F0EEA02000F1F6D /* DateParsingService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		546D2C032E67141D00456B16 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		546D2C0D2E67141D00456B16 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		546D2C092E67141D00456B16 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 546D2BF82E67141B00456B16 /* SlashRemind */;
+			targetProxy = 546D2C082E67141D00456B16 /* PBXContainerItemProxy */;
+		};
+		546D2C132E67141D00456B16 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 546D2BF82E67141B00456B16 /* SlashRemind */;
+			targetProxy = 546D2C122E67141D00456B16 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		546D2C192E67141D00456B16 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		546D2C1A2E67141D00456B16 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		546D2C1C2E67141D00456B16 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SlashRemind/SlashRemind.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SlashRemind/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slashremind.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		546D2C1D2E67141D00456B16 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SlashRemind/SlashRemind.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SlashRemind/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slashremind.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		546D2C1F2E67141D00456B16 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slashremind.app.SlashRemindTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SlashRemind.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SlashRemind";
+			};
+			name = Debug;
+		};
+		546D2C202E67141D00456B16 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slashremind.app.SlashRemindTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SlashRemind.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SlashRemind";
+			};
+			name = Release;
+		};
+		546D2C222E67141D00456B16 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slashremind.app.SlashRemindUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = SlashRemind;
+			};
+			name = Debug;
+		};
+		546D2C232E67141D00456B16 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slashremind.app.SlashRemindUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = SlashRemind;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		546D2BF42E67141B00456B16 /* Build configuration list for PBXProject "SlashRemind" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				546D2C192E67141D00456B16 /* Debug */,
+				546D2C1A2E67141D00456B16 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		546D2C1B2E67141D00456B16 /* Build configuration list for PBXNativeTarget "SlashRemind" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				546D2C1C2E67141D00456B16 /* Debug */,
+				546D2C1D2E67141D00456B16 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		546D2C1E2E67141D00456B16 /* Build configuration list for PBXNativeTarget "SlashRemindTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				546D2C1F2E67141D00456B16 /* Debug */,
+				546D2C202E67141D00456B16 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		546D2C212E67141D00456B16 /* Build configuration list for PBXNativeTarget "SlashRemindUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				546D2C222E67141D00456B16 /* Debug */,
+				546D2C232E67141D00456B16 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5461B6A32F0ED9C600E2E6B8 /* XCRemoteSwiftPackageReference "SoulverCore" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/soulverteam/SoulverCore";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		54B78E5F2F0EEA63000F1F6D /* SoulverCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5461B6A32F0ED9C600E2E6B8 /* XCRemoteSwiftPackageReference "SoulverCore" */;
+			productName = SoulverCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 546D2BF12E67141B00456B16 /* Project object */;
+}

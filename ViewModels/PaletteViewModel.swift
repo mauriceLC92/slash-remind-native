@@ -22,7 +22,7 @@ final class PaletteViewModel: ObservableObject {
     }
 
     func submit() {
-        guard !text.isEmpty, URL(string: settings.baseURL) != nil else {
+        guard !text.isEmpty else {
             error = "Invalid configuration"
             return
         }

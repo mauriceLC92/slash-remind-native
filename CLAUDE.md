@@ -4,26 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-macOS menu bar app that creates native Apple Reminders via a Spotlight-style command palette. Double-press `/` anywhere on macOS to open the palette, type a natural language reminder (must include a date/time), and hit Return.
+macOS menu bar app that creates native Apple Reminders via a Spotlight-style command palette. Press `Cmd+/` anywhere on macOS to open the palette, type a natural language reminder (must include a date/time), and hit Return.
 
 ## Build & Test
 
-**Xcode (primary — required to run the app)**:
 ```bash
-make build          # Debug build
-make run            # Build and launch
-make test           # Run tests
+make build          # Debug build via xcodebuild
+make run            # Build and launch the app
+make test           # Run unit tests
 make release        # Release build
+make clean          # Clean build artifacts
 ```
 
-**Swift Package Manager (compilation/test only — cannot produce runnable app bundle)**:
-```bash
-swift build                                   # Verify compilation
-swift test                                    # All tests
-swift test --filter DoublePressDetectorTests  # Single test class
-```
-
-SPM builds succeed but the app requires a proper Xcode app bundle (Info.plist, LSUIElement, entitlements) to run. The Xcode project lives at `../SlashRemindApp/SlashRemind/SlashRemind.xcodeproj`.
+The Xcode project (`SlashRemind.xcodeproj`) is the source of truth. There is no SPM build.
 
 ## Architecture
 
@@ -38,10 +31,31 @@ AppDelegate (creates all services, wires dependencies)
   ├── PaletteViewModel (receives all services via constructor injection)
   │     └── CommandPaletteWindowController (SwiftUI palette window)
   ├── StatusBarController (menu bar icon + menu)
-  └── HotKeyService (CGEvent tap → toggles palette)
+  └── HotKeyService (Carbon RegisterEventHotKey → toggles palette)
 ```
 
 All services are protocol-based (`RemindersAPI`, `DateParsing`, `NotificationScheduling`) for testability. `MockRemindersAPI` is an `actor` for thread-safe test isolation.
+
+### Directory Layout
+
+```
+SlashRemind.xcodeproj/       Xcode project
+SlashRemindApp.swift          App entry point (@main)
+App/                          AppDelegate
+Palette/                      CommandPaletteView, WindowController, DoublePressDetector
+Services/                     RemindersAPI, EventKitRemindersService, DateParsingService,
+                              HotKeyService, NotificationScheduler, SettingsStore
+ViewModels/                   PaletteViewModel
+StatusBar/                    StatusBarController
+Preferences/                  PreferencesWindow
+Utilities/                    OSLog+Categories
+Resources/                    Assets.xcassets
+SlashRemind/                  Info.plist, entitlements (referenced by xcodeproj)
+Info.plist                    Root Info.plist
+SlashRemindTests/             Unit tests (DateParsing, RemindersAPI, PaletteViewModel)
+SlashRemindUITests/           UI tests
+Makefile                      Build/test/run shortcuts
+```
 
 ### Reminder Creation Pipeline
 
@@ -50,13 +64,13 @@ User input → `SoulverDateParser` extracts date via SoulverCore's `String.dateV
 ### Key Concurrency Patterns (Swift 6 strict mode)
 
 - **`@MainActor`**: All UI components (`StatusBarController`, `CommandPaletteWindowController`, `PaletteViewModel`, AppDelegate UI methods)
-- **`@Sendable` closures**: `HotKeyService` callback bridges CGEvent tap (C callback) to main thread via `DispatchQueue.main.async`
+- **`@Sendable` closures**: `HotKeyService` callback bridges Carbon event handler to main thread via `DispatchQueue.main.async`
 - **`@unchecked Sendable`**: Used for `EventKitRemindersService` (EKEventStore is thread-safe per Apple docs) and `SoulverDateParser` (stateless pure function)
 - **`Unmanaged` pointer**: `HotKeyService` passes `self` to C callback via `Unmanaged.passUnretained`
 
 ### Global Hotkey Mechanism
 
-`HotKeyService` → `CGEvent.tapCreate(.listenOnly)` captures all keyDown events system-wide → `DoublePressDetector` checks if `/` was pressed twice within 0.3s threshold → triggers palette toggle. Requires Accessibility/Input Monitoring permission. `CGEvent.tapCreate` chosen over `NSEvent.addGlobalMonitorForEvents` because the latter cannot capture events for the current app.
+`HotKeyService` → `RegisterEventHotKey` (Carbon API) registers `Cmd+/` (key code 44) → `InstallEventHandler` listens for `kEventHotKeyPressed` → triggers palette toggle via callback. No special permissions required (unlike CGEvent tap).
 
 ### Date Parsing Quirk
 

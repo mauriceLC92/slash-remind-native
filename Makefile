@@ -1,6 +1,6 @@
 .PHONY: help build release run clean test
 
-XCODE_PROJECT := ../SlashRemindApp/SlashRemind/SlashRemind.xcodeproj
+XCODE_PROJECT := SlashRemind.xcodeproj
 SCHEME := SlashRemind
 
 help:

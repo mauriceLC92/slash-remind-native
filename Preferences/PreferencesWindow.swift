@@ -9,17 +9,13 @@ struct PreferencesWindow: View {
                 HStack {
                     Text("Trigger")
                     Spacer()
-                    Text("Double '/' ")
+                    Text("⌘ + /")
                     Button("Change…") {}
                         .disabled(true)
                 }
             }
-            Section(header: Text("Backend")) {
-                TextField("Base URL", text: $settings.baseURL)
-                    .textFieldStyle(.roundedBorder)
-            }
-            Section(header: Text("Sync")) {
-                Toggle("Enable cloud sync & local notifications", isOn: $settings.syncEnabled)
+            Section(header: Text("Notifications")) {
+                Toggle("Enable local notifications", isOn: $settings.syncEnabled)
             }
         }
         .padding(20)
