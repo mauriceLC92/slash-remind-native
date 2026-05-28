@@ -4,7 +4,7 @@ import os.log
 #endif
 
 struct Reminder {
-    let text: String
+    let title: String
     let dueDate: Date?
 }
 
@@ -15,9 +15,9 @@ protocol NotificationScheduling {
 final class NotificationScheduler: NotificationScheduling {
     func schedule(_ reminder: Reminder) {
 #if canImport(os)
-        os_log("schedule %{public}@", log: .notifications, type: .info, reminder.text)
+        os_log("Scheduled local notification due_date_present=%{public}@", log: .notifications, type: .info, reminder.dueDate == nil ? "false" : "true")
 #else
-        print("schedule \(reminder.text)")
+        print("schedule")
 #endif
     }
 }

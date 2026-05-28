@@ -3,6 +3,7 @@ import XCTest
 
 final class DateParsingServiceTests: XCTestCase {
     var parser: DateParsing!
+    let defaultTime = DateComponents(hour: 9, minute: 0, second: 0)
 
     override func setUp() {
         super.setUp()
@@ -10,7 +11,7 @@ final class DateParsingServiceTests: XCTestCase {
     }
 
     func testParsesTomorrowAt9AM() {
-        let result = parser.parseDate(from: "tomorrow at 9am")
+        let result = parser.parseDate(from: "tomorrow at 9am", defaultTime: defaultTime)
         XCTAssertNotNil(result)
 
         guard let date = result else { return }
@@ -21,7 +22,7 @@ final class DateParsingServiceTests: XCTestCase {
     }
 
     func testParsesNextMondayAt3PM() {
-        let result = parser.parseDate(from: "next Monday 3pm")
+        let result = parser.parseDate(from: "next Monday 3pm", defaultTime: defaultTime)
         XCTAssertNotNil(result)
 
         guard let date = result else { return }
@@ -32,7 +33,7 @@ final class DateParsingServiceTests: XCTestCase {
     }
 
     func testDateOnlyApplies9AMDefault() {
-        let result = parser.parseDate(from: "tomorrow")
+        let result = parser.parseDate(from: "tomorrow", defaultTime: defaultTime)
         XCTAssertNotNil(result)
 
         guard let date = result else { return }
@@ -44,7 +45,7 @@ final class DateParsingServiceTests: XCTestCase {
     }
 
     func testParsesMarch15WithDefault9AM() {
-        let result = parser.parseDate(from: "March 15")
+        let result = parser.parseDate(from: "March 15", defaultTime: defaultTime)
         XCTAssertNotNil(result)
 
         guard let date = result else { return }
@@ -57,7 +58,7 @@ final class DateParsingServiceTests: XCTestCase {
     }
 
     func testParsesRelativeTime() {
-        let result = parser.parseDate(from: "in 3 hours")
+        let result = parser.parseDate(from: "in 3 hours", defaultTime: defaultTime)
         XCTAssertNotNil(result)
 
         guard let date = result else { return }
@@ -68,12 +69,23 @@ final class DateParsingServiceTests: XCTestCase {
     }
 
     func testReturnsNilForInvalidInput() {
-        let result = parser.parseDate(from: "xyz invalid")
+        let result = parser.parseDate(from: "xyz invalid", defaultTime: defaultTime)
         XCTAssertNil(result)
     }
 
     func testReturnsNilForEmptyString() {
-        let result = parser.parseDate(from: "")
+        let result = parser.parseDate(from: "", defaultTime: defaultTime)
         XCTAssertNil(result)
+    }
+
+    func testDateOnlyUsesConfiguredDefaultTime() {
+        let result = parser.parseDate(from: "tomorrow", defaultTime: DateComponents(hour: 14, minute: 30, second: 0))
+        XCTAssertNotNil(result)
+
+        guard let date = result else { return }
+        let components = Calendar.current.dateComponents([.hour, .minute, .second], from: date)
+        XCTAssertEqual(components.hour, 14)
+        XCTAssertEqual(components.minute, 30)
+        XCTAssertEqual(components.second, 0)
     }
 }
