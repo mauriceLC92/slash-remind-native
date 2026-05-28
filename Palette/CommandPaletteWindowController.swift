@@ -29,7 +29,7 @@ final class CommandPaletteWindowController: NSWindowController {
     private var isAnimatingHide = false
     private var observers: [NSObjectProtocol] = []
 
-    private let paletteSize = NSSize(width: 520, height: 168)
+    private let paletteSize = NSSize(width: 520, height: 110)
 
     init(viewModel: PaletteViewModel) {
         self.viewModel = viewModel
@@ -48,7 +48,7 @@ final class CommandPaletteWindowController: NSWindowController {
         panel.backgroundColor = .clear
         panel.titleVisibility = .hidden
         panel.acceptsMouseMovedEvents = true
-        panel.hasShadow = false
+        panel.hasShadow = true
 
         super.init(window: panel)
 

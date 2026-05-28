@@ -30,21 +30,26 @@ struct CommandPaletteView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             inputRow
-            feedbackRow
             footer
         }
-        .padding(14)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
         .frame(width: 520)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.regularMaterial)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(.ultraThinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(Color.black.opacity(0.24))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(.white.opacity(0.16), lineWidth: 0.8)
                 )
-                .shadow(color: .black.opacity(0.16), radius: 14, x: 0, y: 6)
+                .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 8)
         )
         .background(KeyEventHandling(onEscape: onDismiss))
+        .preferredColorScheme(.dark)
         .onAppear {
             focusTextField()
         }
@@ -74,10 +79,20 @@ struct CommandPaletteView: View {
     }
 
     private var inputRow: some View {
-        HStack(spacing: 10) {
-            Image(systemName: viewModel.didCreateReminder ? "checkmark.circle.fill" : "calendar")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(viewModel.didCreateReminder ? Color.green : Color.secondary)
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(.thinMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .stroke(.white.opacity(0.12), lineWidth: 0.7)
+                    )
+
+                Image(systemName: viewModel.didCreateReminder ? "checkmark.circle.fill" : "calendar")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(viewModel.didCreateReminder ? Color.green : Color.white.opacity(0.84))
+            }
+            .frame(width: 32, height: 32)
 
             TextField(currentExample, text: $viewModel.text)
                 .focused($isTextFieldFocused)
@@ -88,73 +103,77 @@ struct CommandPaletteView: View {
                     }
                 }
                 .textFieldStyle(.plain)
-                .font(.system(size: 18, weight: .regular))
+                .font(.system(size: 19, weight: .regular))
+                .foregroundStyle(.white)
                 .disabled(viewModel.isSubmitting || viewModel.didCreateReminder)
                 .accessibilityIdentifier("quickAddTextField")
+                .frame(height: 34)
 
             if viewModel.isSubmitting {
                 ProgressView()
                     .controlSize(.small)
+                    .frame(width: 34, height: 34)
             } else if !viewModel.didCreateReminder {
-                KeyBadge(text: "↩")
+                Button {
+                    guard canSubmit else { return }
+                    Task {
+                        await viewModel.submit()
+                    }
+                } label: {
+                    Image(systemName: "arrow.turn.down.left")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 38, height: 34)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(canSubmit ? Color.blue : Color.blue.opacity(0.45))
+                                .shadow(color: Color.blue.opacity(canSubmit ? 0.28 : 0), radius: 8, x: 0, y: 3)
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSubmit)
+                .accessibilityLabel("Create reminder")
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(height: 52)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.white.opacity(0.06))
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .fill(Color.white.opacity(0.04))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(.white.opacity(0.12), lineWidth: 0.8)
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .stroke(.white.opacity(0.13), lineWidth: 0.8)
                 )
         )
     }
 
-    @ViewBuilder
-    private var feedbackRow: some View {
-        if viewModel.didCreateReminder {
-            HStack(spacing: 7) {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.green)
-                Text("Reminder created")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-            .transition(.opacity)
-        } else if let error = viewModel.error {
-            HStack(spacing: 7) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.red)
-                Text(error)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-            }
-            .transition(.opacity)
-        }
-    }
-
     private var footer: some View {
-        HStack(spacing: 8) {
-            KeyBadge(text: "⎋")
-            Text("close")
-                .foregroundStyle(.secondary)
+        HStack(spacing: 6) {
+            let detectedDueDate = viewModel.detectedDueDateDescription
 
-            Text("•")
-                .foregroundStyle(.tertiary)
+            FooterPill(icon: "xmark.circle", text: "Close")
 
-            Text("Include a date or time")
-                .foregroundStyle(.secondary)
+            if viewModel.didCreateReminder {
+                FooterPill(icon: "checkmark.circle.fill", text: "Reminder created", tint: .green)
+            } else if let error = viewModel.error {
+                FooterPill(icon: "exclamationmark.triangle.fill", text: error, tint: .red)
+            } else {
+                FooterPill(
+                    icon: detectedDueDate == nil ? "circle" : "circle.fill",
+                    text: detectedDueDate.map { "Detected: \($0)" } ?? "Detected: none",
+                    tint: detectedDueDate == nil ? .secondary : .green
+                )
+            }
 
-            Spacer()
+            FooterPill(icon: "calendar", text: "Add date/time")
 
-            KeyBadge(text: "⌘")
-            KeyBadge(text: "/")
+            Spacer(minLength: 6)
+
+            FooterPill(text: "⌘", trailingText: "Return")
+            FooterPill(text: "esc")
         }
+        .frame(height: 24)
         .font(.system(size: 11, weight: .medium))
     }
 
@@ -169,20 +188,38 @@ struct CommandPaletteView: View {
     }
 }
 
-struct KeyBadge: View {
+struct FooterPill: View {
+    var icon: String?
     let text: String
+    var trailingText: String?
+    var tint: Color = .secondary
 
     var body: some View {
-        Text(text)
-            .font(.system(size: 10, weight: .semibold))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 3)
-            .background(.thinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .stroke(.white.opacity(0.14), lineWidth: 0.7)
-            )
+        HStack(spacing: 8) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: icon == "circle.fill" ? 6 : 10, weight: .semibold))
+                    .foregroundStyle(tint)
+            }
+
+            Text(text)
+                .lineLimit(1)
+                .foregroundStyle(.white.opacity(0.76))
+
+            if let trailingText {
+                Text(trailingText)
+                    .foregroundStyle(.white.opacity(0.58))
+            }
+        }
+        .font(.system(size: 11, weight: .medium))
+        .padding(.horizontal, 8)
+        .frame(height: 24)
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .stroke(.white.opacity(0.12), lineWidth: 0.7)
+        )
     }
 }
 

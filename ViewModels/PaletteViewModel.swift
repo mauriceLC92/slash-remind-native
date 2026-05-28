@@ -13,6 +13,16 @@ final class PaletteViewModel: ObservableObject {
     private let scheduler: NotificationScheduling
     private let inputParser: ReminderInputParsing
 
+    var detectedDueDateDescription: String? {
+        let message = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !message.isEmpty,
+              let parsed = inputParser.parse(message, defaultTime: settings.defaultTimeComponents) else {
+            return nil
+        }
+
+        return formattedDueDate(parsed.dueDate)
+    }
+
     init(api: RemindersAPI, settings: SettingsStore, scheduler: NotificationScheduling, inputParser: ReminderInputParsing) {
         self.api = api
         self.settings = settings
@@ -65,5 +75,25 @@ final class PaletteViewModel: ObservableObject {
         error = nil
         isSubmitting = false
         didCreateReminder = false
+    }
+
+    private func formattedDueDate(_ date: Date) -> String {
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short
+
+        let calendar = Calendar.current
+        let time = timeFormatter.string(from: date)
+
+        if calendar.isDateInToday(date) {
+            return "Today at \(time)"
+        }
+
+        if calendar.isDateInTomorrow(date) {
+            return "Tomorrow at \(time)"
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.setLocalizedDateFormatFromTemplate("MMM d")
+        return "\(dateFormatter.string(from: date)) at \(time)"
     }
 }
