@@ -54,7 +54,7 @@ final class CommandPaletteWindowController: NSWindowController {
         panel.backgroundColor = .clear
         panel.titleVisibility = .hidden
         panel.acceptsMouseMovedEvents = true
-        panel.hasShadow = true
+        panel.hasShadow = false
 
         super.init(window: panel)
 
