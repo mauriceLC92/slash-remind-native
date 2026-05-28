@@ -6,7 +6,7 @@ struct SlashRemindApp: App {
     
     var body: some Scene {
         Settings {
-            PreferencesWindow(settings: appDelegate.settings)
+            PreferencesWindow(settings: appDelegate.settings, listProvider: appDelegate.remindersService)
         }
     }
 }

@@ -17,49 +17,46 @@ final class PaletteViewModelTests: XCTestCase {
         let mockAPI = MockRemindersAPI()
         let mockScheduler = MockNotificationScheduler()
         let fixedDate = Date(timeIntervalSince1970: 1704110400)
-        let mockDateParser = MockDateParser(fixedDate: fixedDate)
-        let settings = SettingsStore()
+        let mockInputParser = MockInputParser(parsed: ParsedReminderInput(title: "Buy milk", dueDate: fixedDate))
+        let settings = SettingsStore(defaults: isolatedDefaults())
 
         let vm = await PaletteViewModel(
             api: mockAPI,
             settings: settings,
             scheduler: mockScheduler,
-            dateParser: mockDateParser
+            inputParser: mockInputParser
         )
 
         await vm.setText("Buy milk tomorrow")
         await vm.submit()
 
-        try await Task.sleep(nanoseconds: 100_000_000)
-
         let reminders = await mockAPI.createdReminders
         XCTAssertEqual(reminders.count, 1)
-        XCTAssertEqual(reminders.first?.text, "Buy milk tomorrow")
+        XCTAssertEqual(reminders.first?.title, "Buy milk")
         XCTAssertEqual(reminders.first?.dueDate, fixedDate)
+        XCTAssertNil(reminders.first?.calendarIdentifier)
 
         let scheduled = await mockScheduler.scheduledReminders
         XCTAssertEqual(scheduled.count, 1)
-        XCTAssertEqual(scheduled.first?.text, "Buy milk tomorrow")
+        XCTAssertEqual(scheduled.first?.title, "Buy milk")
         XCTAssertEqual(scheduled.first?.dueDate, fixedDate)
     }
 
     func testSubmitWithNilDateShowsErrorAndDoesNotCreateReminder() async throws {
         let mockAPI = MockRemindersAPI()
         let mockScheduler = MockNotificationScheduler()
-        let mockDateParser = MockDateParser(fixedDate: nil)
-        let settings = SettingsStore()
+        let mockInputParser = MockInputParser(parsed: nil)
+        let settings = SettingsStore(defaults: isolatedDefaults())
 
         let vm = await PaletteViewModel(
             api: mockAPI,
             settings: settings,
             scheduler: mockScheduler,
-            dateParser: mockDateParser
+            inputParser: mockInputParser
         )
 
         await vm.setText("Buy milk")
         await vm.submit()
-
-        try await Task.sleep(nanoseconds: 100_000_000)
 
         let error = await vm.getError()
         XCTAssertNotNil(error)
@@ -71,6 +68,40 @@ final class PaletteViewModelTests: XCTestCase {
 
         let scheduled = await mockScheduler.scheduledReminders
         XCTAssertEqual(scheduled.count, 0)
+    }
+
+    func testSubmitUsesSelectedReminderListAndSkipsNotificationsWhenDisabled() async throws {
+        let mockAPI = MockRemindersAPI()
+        let mockScheduler = MockNotificationScheduler()
+        let fixedDate = Date(timeIntervalSince1970: 1704110400)
+        let settings = SettingsStore(defaults: isolatedDefaults())
+        await MainActor.run {
+            settings.defaultReminderListIdentifier = "calendar-id"
+            settings.notificationsEnabled = false
+        }
+
+        let vm = await PaletteViewModel(
+            api: mockAPI,
+            settings: settings,
+            scheduler: mockScheduler,
+            inputParser: MockInputParser(parsed: ParsedReminderInput(title: "Pay rent", dueDate: fixedDate))
+        )
+
+        await vm.setText("Pay rent tomorrow")
+        await vm.submit()
+
+        let reminders = await mockAPI.createdReminders
+        XCTAssertEqual(reminders.first?.calendarIdentifier, "calendar-id")
+
+        let scheduled = await mockScheduler.scheduledReminders
+        XCTAssertTrue(scheduled.isEmpty)
+    }
+
+    private func isolatedDefaults() -> UserDefaults {
+        let suiteName = "PaletteViewModelTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        return defaults
     }
 }
 
@@ -85,15 +116,15 @@ extension PaletteViewModel {
     }
 }
 
-final class MockDateParser: DateParsing, @unchecked Sendable {
-    private let fixedDate: Date?
+final class MockInputParser: ReminderInputParsing, @unchecked Sendable {
+    private let parsed: ParsedReminderInput?
 
-    init(fixedDate: Date?) {
-        self.fixedDate = fixedDate
+    init(parsed: ParsedReminderInput?) {
+        self.parsed = parsed
     }
 
-    func parseDate(from text: String) -> Date? {
-        return fixedDate
+    func parse(_ text: String, defaultTime: DateComponents) -> ParsedReminderInput? {
+        parsed
     }
 }
 

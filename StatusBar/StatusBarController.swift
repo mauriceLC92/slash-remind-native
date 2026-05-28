@@ -16,19 +16,19 @@ final class StatusBarController {
 
     private func constructMenu() {
         if let button = statusItem.button {
-            let symbol = settings.syncEnabled ? "bolt.horizontal.circle" : "bolt.slash.circle"
+            let symbol = settings.notificationsEnabled ? "bell.circle" : "bell.slash.circle"
             button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         }
         let menu = NSMenu()
         
-        let paletteItem = NSMenuItem(title: "Open Command Palette", action: #selector(openPalette), keyEquivalent: "")
+        let paletteItem = NSMenuItem(title: "Open Quick Add", action: #selector(openPalette), keyEquivalent: "")
         paletteItem.target = self
         menu.addItem(paletteItem)
         
-        let syncTitle = settings.syncEnabled ? "Pause Sync" : "Resume Sync"
-        let syncItem = NSMenuItem(title: syncTitle, action: #selector(toggleSync), keyEquivalent: "")
-        syncItem.target = self
-        menu.addItem(syncItem)
+        let notificationTitle = settings.notificationsEnabled ? "Disable Notifications" : "Enable Notifications"
+        let notificationItem = NSMenuItem(title: notificationTitle, action: #selector(toggleNotifications), keyEquivalent: "")
+        notificationItem.target = self
+        menu.addItem(notificationItem)
         
         menu.addItem(NSMenuItem.separator())
         
@@ -52,8 +52,8 @@ final class StatusBarController {
         NSApp.sendAction(#selector(AppDelegate.openPreferences(_:)), to: nil, from: nil)
     }
 
-    @objc private func toggleSync() {
-        settings.syncEnabled.toggle()
+    @objc private func toggleNotifications() {
+        settings.notificationsEnabled.toggle()
         constructMenu()
     }
 

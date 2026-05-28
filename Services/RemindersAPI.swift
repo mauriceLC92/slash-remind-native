@@ -1,17 +1,26 @@
 import Foundation
 
+struct ReminderList: Identifiable, Equatable, Sendable {
+    let id: String
+    let title: String
+}
+
 protocol RemindersAPI: Sendable {
-    func createReminder(text: String, dueDate: Date?) async throws
+    func createReminder(title: String, dueDate: Date?, calendarIdentifier: String?) async throws
+}
+
+protocol ReminderListProviding: Sendable {
+    func reminderLists() async throws -> [ReminderList]
 }
 
 actor MockRemindersAPI: RemindersAPI {
-    private var created: [(text: String, dueDate: Date?)] = []
+    private var created: [(title: String, dueDate: Date?, calendarIdentifier: String?)] = []
 
-    func createReminder(text: String, dueDate: Date?) async throws {
-        created.append((text: text, dueDate: dueDate))
+    func createReminder(title: String, dueDate: Date?, calendarIdentifier: String?) async throws {
+        created.append((title: title, dueDate: dueDate, calendarIdentifier: calendarIdentifier))
     }
 
-    var createdReminders: [(text: String, dueDate: Date?)] {
+    var createdReminders: [(title: String, dueDate: Date?, calendarIdentifier: String?)] {
         get async {
             return created
         }

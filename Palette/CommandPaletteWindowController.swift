@@ -4,8 +4,22 @@ import SwiftUI
 import QuartzCore
 
 final class KeyablePanel: NSPanel {
+    var onCancel: (() -> Void)?
+
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
+
+    override func cancelOperation(_ sender: Any?) {
+        onCancel?()
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 {
+            onCancel?()
+            return
+        }
+        super.keyDown(with: event)
+    }
 }
 
 @MainActor
@@ -13,6 +27,7 @@ final class CommandPaletteWindowController: NSWindowController {
     private let viewModel: PaletteViewModel
     private var hostingView: NSHostingView<CommandPaletteView>!
     private var isAnimatingHide = false
+    private var observers: [NSObjectProtocol] = []
 
     private let paletteSize = NSSize(width: 520, height: 168)
 
@@ -28,7 +43,7 @@ final class CommandPaletteWindowController: NSWindowController {
 
         panel.level = .floating
         panel.isFloatingPanel = true
-        panel.hidesOnDeactivate = false
+        panel.hidesOnDeactivate = true
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.titleVisibility = .hidden
@@ -37,6 +52,10 @@ final class CommandPaletteWindowController: NSWindowController {
 
         super.init(window: panel)
 
+        panel.onCancel = { [weak self] in
+            self?.hide()
+        }
+
         let content = CommandPaletteView(viewModel: viewModel, onDismiss: { [weak self] in
             self?.hide()
         })
@@ -44,10 +63,37 @@ final class CommandPaletteWindowController: NSWindowController {
         self.hostingView.canDrawConcurrently = false
         panel.contentView = self.hostingView
         panel.initialFirstResponder = self.hostingView
+
+        observers = [
+            NotificationCenter.default.addObserver(
+                forName: NSWindow.didResignKeyNotification,
+                object: panel,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    self?.hide(animated: false)
+                }
+            },
+            NotificationCenter.default.addObserver(
+                forName: NSApplication.didResignActiveNotification,
+                object: NSApp,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    self?.hide(animated: false)
+                }
+            }
+        ]
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    deinit {
+        for observer in observers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
 
     func toggle() {
         if window?.isVisible == true {
@@ -61,6 +107,7 @@ final class CommandPaletteWindowController: NSWindowController {
         guard let window = window, !window.isVisible else { return }
 
         viewModel.reset()
+        viewModel.requestFocus()
         window.setFrame(centeredFrame(for: paletteSize), display: false)
 
         let finalFrame = window.frame
@@ -72,15 +119,21 @@ final class CommandPaletteWindowController: NSWindowController {
 
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(hostingView)
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.16
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             window.animator().alphaValue = 1
             window.animator().setFrame(finalFrame, display: true)
-        } completionHandler: {
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+        } completionHandler: { [weak self] in
+            Task { @MainActor in
+                guard let self, let window = self.window else { return }
+                window.makeKeyAndOrderFront(nil)
+                window.makeFirstResponder(self.hostingView)
+                self.viewModel.requestFocus()
+                NSApp.activate(ignoringOtherApps: true)
+            }
         }
     }
 
@@ -116,13 +169,24 @@ final class CommandPaletteWindowController: NSWindowController {
     }
 
     private func centeredFrame(for size: NSSize) -> NSRect {
-        guard let screenFrame = NSScreen.main?.visibleFrame else {
+        guard let screenFrame = targetScreen()?.visibleFrame else {
             return NSRect(origin: .zero, size: size)
         }
 
         let x = screenFrame.midX - (size.width / 2)
         let y = screenFrame.midY - (size.height / 2)
         return NSRect(x: x, y: y, width: size.width, height: size.height)
+    }
+
+    private func targetScreen() -> NSScreen? {
+        if let keyWindowScreen = NSApp.keyWindow?.screen {
+            return keyWindowScreen
+        }
+
+        let mouseLocation = NSEvent.mouseLocation
+        return NSScreen.screens.first { screen in
+            NSMouseInRect(mouseLocation, screen.frame, false)
+        } ?? NSScreen.main
     }
 }
 #endif

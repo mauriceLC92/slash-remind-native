@@ -7,21 +7,24 @@ struct CommandPaletteView: View {
     var onDismiss: () -> Void = {}
 
     @FocusState private var isTextFieldFocused: Bool
-    @StateObject private var focusCoordinator = FocusCoordinator()
     @State private var dismissWorkItem: DispatchWorkItem?
+    @State private var exampleIndex = 0
+
+    private let exampleTimer = Timer.publish(every: 4.0, on: .main, in: .common).autoconnect()
+    private let examples = [
+        "buy milk tomorrow at 9am",
+        "call Sam this afternoon",
+        "submit expenses next Friday",
+        "take out the bins tonight",
+        "book dentist appointment Monday at 10am"
+    ]
 
     private var canSubmit: Bool {
         !viewModel.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isSubmitting && !viewModel.didCreateReminder
     }
 
-    private class FocusCoordinator: ObservableObject {
-        @Published var shouldFocus: Bool = false
-
-        func triggerFocus() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                self.shouldFocus = true
-            }
-        }
+    private var currentExample: String {
+        examples[exampleIndex % examples.count]
     }
 
     var body: some View {
@@ -43,18 +46,18 @@ struct CommandPaletteView: View {
         )
         .background(KeyEventHandling(onEscape: onDismiss))
         .onAppear {
-            focusCoordinator.triggerFocus()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                isTextFieldFocused = true
-            }
+            focusTextField()
         }
         .onDisappear {
             dismissWorkItem?.cancel()
         }
-        .onReceive(focusCoordinator.$shouldFocus) { shouldFocus in
-            if shouldFocus {
-                isTextFieldFocused = true
-                focusCoordinator.shouldFocus = false
+        .onChange(of: viewModel.focusRequestID) { _ in
+            focusTextField()
+        }
+        .onReceive(exampleTimer) { _ in
+            guard viewModel.text.isEmpty else { return }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                exampleIndex = (exampleIndex + 1) % examples.count
             }
         }
         .onChange(of: viewModel.didCreateReminder) { didCreateReminder in
@@ -76,15 +79,18 @@ struct CommandPaletteView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(viewModel.didCreateReminder ? Color.green : Color.secondary)
 
-            TextField("Remind me to follow up tomorrow at 9am", text: $viewModel.text)
+            TextField(currentExample, text: $viewModel.text)
                 .focused($isTextFieldFocused)
                 .onSubmit {
                     guard canSubmit else { return }
-                    viewModel.submit()
+                    Task {
+                        await viewModel.submit()
+                    }
                 }
                 .textFieldStyle(.plain)
                 .font(.system(size: 18, weight: .regular))
                 .disabled(viewModel.isSubmitting || viewModel.didCreateReminder)
+                .accessibilityIdentifier("quickAddTextField")
 
             if viewModel.isSubmitting {
                 ProgressView()
@@ -150,6 +156,16 @@ struct CommandPaletteView: View {
             KeyBadge(text: "/")
         }
         .font(.system(size: 11, weight: .medium))
+    }
+
+    private func focusTextField() {
+        isTextFieldFocused = false
+        DispatchQueue.main.async {
+            isTextFieldFocused = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            isTextFieldFocused = true
+        }
     }
 }
 
