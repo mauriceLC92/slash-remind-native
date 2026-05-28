@@ -1,13 +1,11 @@
 import Foundation
-#if os(macOS)
-import AppKit
-#endif
 
 @MainActor
 final class PaletteViewModel: ObservableObject {
     @Published var text: String = ""
     @Published var isSubmitting = false
     @Published var error: String?
+    @Published var didCreateReminder = false
 
     private let api: RemindersAPI
     private let settings: SettingsStore
@@ -22,29 +20,33 @@ final class PaletteViewModel: ObservableObject {
     }
 
     func submit() {
-        guard !text.isEmpty else {
-            error = "Invalid configuration"
+        let message = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !message.isEmpty else {
+            error = "Type a reminder with a date or time"
             return
         }
+
         isSubmitting = true
-        let message = text
-        let parsedDate = dateParser.parseDate(from: message)
-        guard let parsedDate = parsedDate else {
+        didCreateReminder = false
+        error = nil
+
+        guard let parsedDate = dateParser.parseDate(from: message) else {
             self.error = "Please include a date or time (e.g., 'tomorrow at 9am')"
             self.isSubmitting = false
             return
         }
+
         Task {
             do {
                 try await api.createReminder(text: message, dueDate: parsedDate)
                 scheduler.schedule(Reminder(text: message, dueDate: parsedDate))
-#if os(macOS)
-                NSApp.keyWindow?.close()
-#endif
-                reset()
-            } catch {
-                self.error = "Network error"
+                self.didCreateReminder = true
                 self.isSubmitting = false
+                self.error = nil
+            } catch {
+                self.error = "Couldn’t create reminder. Please try again."
+                self.isSubmitting = false
+                self.didCreateReminder = false
             }
         }
     }
@@ -53,5 +55,6 @@ final class PaletteViewModel: ObservableObject {
         text = ""
         error = nil
         isSubmitting = false
+        didCreateReminder = false
     }
 }

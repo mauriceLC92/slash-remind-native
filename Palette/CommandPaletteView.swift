@@ -1,95 +1,184 @@
 #if os(macOS)
 import SwiftUI
+import AppKit
 
 struct CommandPaletteView: View {
     @ObservedObject var viewModel: PaletteViewModel
     var onDismiss: () -> Void = {}
+
     @FocusState private var isTextFieldFocused: Bool
-    
-    // Force focus coordinator
+    @StateObject private var focusCoordinator = FocusCoordinator()
+    @State private var dismissWorkItem: DispatchWorkItem?
+
+    private var canSubmit: Bool {
+        !viewModel.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isSubmitting && !viewModel.didCreateReminder
+    }
+
     private class FocusCoordinator: ObservableObject {
         @Published var shouldFocus: Bool = false
-        
+
         func triggerFocus() {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 self.shouldFocus = true
             }
         }
     }
-    
-    @StateObject private var focusCoordinator = FocusCoordinator()
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "magnifyingglass")
-                TextField("Search…", text: $viewModel.text)
-                    .focused($isTextFieldFocused)
-                    .onSubmit(viewModel.submit)
-                    .textFieldStyle(.plain)
-                    .onReceive(focusCoordinator.$shouldFocus) { shouldFocus in
-                        if shouldFocus {
-                            isTextFieldFocused = true
-                            focusCoordinator.shouldFocus = false
-                        }
-                    }
-            }
-            .padding(12)
-            .background(.regularMaterial)
-            .cornerRadius(12)
-            if let error = viewModel.error {
-                Text(error)
-                    .foregroundColor(.red)
-                    .font(.footnote)
-            }
-            HStack(spacing: 4) {
-                Text("Type")
-                CapsuleBadge(text: "#")
-                Text("to access projects,")
-                CapsuleBadge(text: ">")
-                Text("for users, and")
-                CapsuleBadge(text: "?")
-                Text("for help.")
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .padding(.top, 4)
+        VStack(alignment: .leading, spacing: 10) {
+            inputRow
+            feedbackRow
+            footer
         }
-        .padding(20)
-        .frame(width: 480)
+        .padding(14)
+        .frame(width: 520)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(.regularMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(.white.opacity(0.16), lineWidth: 0.8)
+                )
+                .shadow(color: .black.opacity(0.16), radius: 14, x: 0, y: 6)
+        )
         .background(KeyEventHandling(onEscape: onDismiss))
         .onAppear {
-            // Use coordinator for more reliable focus
             focusCoordinator.triggerFocus()
-            
-            // Fallback direct focus
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 isTextFieldFocused = true
             }
         }
+        .onDisappear {
+            dismissWorkItem?.cancel()
+        }
+        .onReceive(focusCoordinator.$shouldFocus) { shouldFocus in
+            if shouldFocus {
+                isTextFieldFocused = true
+                focusCoordinator.shouldFocus = false
+            }
+        }
+        .onChange(of: viewModel.didCreateReminder) { didCreateReminder in
+            guard didCreateReminder else { return }
+            NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+
+            dismissWorkItem?.cancel()
+            let workItem = DispatchWorkItem {
+                onDismiss()
+            }
+            dismissWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.56, execute: workItem)
+        }
+    }
+
+    private var inputRow: some View {
+        HStack(spacing: 10) {
+            Image(systemName: viewModel.didCreateReminder ? "checkmark.circle.fill" : "calendar")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(viewModel.didCreateReminder ? Color.green : Color.secondary)
+
+            TextField("Remind me to follow up tomorrow at 9am", text: $viewModel.text)
+                .focused($isTextFieldFocused)
+                .onSubmit {
+                    guard canSubmit else { return }
+                    viewModel.submit()
+                }
+                .textFieldStyle(.plain)
+                .font(.system(size: 18, weight: .regular))
+                .disabled(viewModel.isSubmitting || viewModel.didCreateReminder)
+
+            if viewModel.isSubmitting {
+                ProgressView()
+                    .controlSize(.small)
+            } else if !viewModel.didCreateReminder {
+                KeyBadge(text: "↩")
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.white.opacity(0.06))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(.white.opacity(0.12), lineWidth: 0.8)
+                )
+        )
+    }
+
+    @ViewBuilder
+    private var feedbackRow: some View {
+        if viewModel.didCreateReminder {
+            HStack(spacing: 7) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.green)
+                Text("Reminder created")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+            .transition(.opacity)
+        } else if let error = viewModel.error {
+            HStack(spacing: 7) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.red)
+                Text(error)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+            }
+            .transition(.opacity)
+        }
+    }
+
+    private var footer: some View {
+        HStack(spacing: 8) {
+            KeyBadge(text: "⎋")
+            Text("close")
+                .foregroundStyle(.secondary)
+
+            Text("•")
+                .foregroundStyle(.tertiary)
+
+            Text("Include a date or time")
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            KeyBadge(text: "⌘")
+            KeyBadge(text: "/")
+        }
+        .font(.system(size: 11, weight: .medium))
     }
 }
 
-struct CapsuleBadge: View {
+struct KeyBadge: View {
     let text: String
+
     var body: some View {
         Text(text)
-            .padding(.horizontal, 4)
-            .padding(.vertical, 2)
+            .font(.system(size: 10, weight: .semibold))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
             .background(.thinMaterial)
-            .cornerRadius(4)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(.white.opacity(0.14), lineWidth: 0.7)
+            )
     }
 }
 
 struct KeyEventHandling: NSViewRepresentable {
     let onEscape: () -> Void
-    
+
     func makeNSView(context: Context) -> NSView {
         let view = KeyHandlingView()
         view.onEscape = onEscape
         return view
     }
-    
+
     func updateNSView(_ nsView: NSView, context: Context) {
         if let keyView = nsView as? KeyHandlingView {
             keyView.onEscape = onEscape
@@ -99,21 +188,19 @@ struct KeyEventHandling: NSViewRepresentable {
 
 class KeyHandlingView: NSView {
     var onEscape: (() -> Void)?
-    
+
     override var acceptsFirstResponder: Bool { true }
-    
+
     override func keyDown(with event: NSEvent) {
-        if event.keyCode == 53 { // Escape key
+        if event.keyCode == 53 {
             onEscape?()
         } else {
-            // Pass the event to the next responder
             self.nextResponder?.keyDown(with: event)
         }
     }
-    
-    // Override to handle key events without stealing first responder from TextField
+
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if event.keyCode == 53 { // Escape key
+        if event.keyCode == 53 {
             onEscape?()
             return true
         }

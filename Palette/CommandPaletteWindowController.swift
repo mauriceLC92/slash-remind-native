@@ -1,25 +1,31 @@
 #if os(macOS)
 import AppKit
 import SwiftUI
+import QuartzCore
 
-// Custom panel that can become key window for text input
 final class KeyablePanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 }
 
+@MainActor
 final class CommandPaletteWindowController: NSWindowController {
     private let viewModel: PaletteViewModel
     private var hostingView: NSHostingView<CommandPaletteView>!
+    private var isAnimatingHide = false
+
+    private let paletteSize = NSSize(width: 520, height: 168)
 
     init(viewModel: PaletteViewModel) {
         self.viewModel = viewModel
-        let panel = KeyablePanel(contentRect: NSRect(x: 0, y: 0, width: 480, height: 180),
-                                 styleMask: [.borderless],
-                                 backing: .buffered,
-                                 defer: false)
-        
-        // Critical panel configuration for text input
+
+        let panel = KeyablePanel(
+            contentRect: NSRect(origin: .zero, size: paletteSize),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
         panel.level = .floating
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = false
@@ -27,21 +33,16 @@ final class CommandPaletteWindowController: NSWindowController {
         panel.backgroundColor = .clear
         panel.titleVisibility = .hidden
         panel.acceptsMouseMovedEvents = true
-        
+        panel.hasShadow = false
+
         super.init(window: panel)
-        
-        // Now we can safely use self
+
         let content = CommandPaletteView(viewModel: viewModel, onDismiss: { [weak self] in
-            self?.close()
+            self?.hide()
         })
         self.hostingView = NSHostingView(rootView: content)
-        
-        // Configure hosting view for proper text input
         self.hostingView.canDrawConcurrently = false
-        
         panel.contentView = self.hostingView
-        
-        // Set up responder chain
         panel.initialFirstResponder = self.hostingView
     }
 
@@ -50,38 +51,78 @@ final class CommandPaletteWindowController: NSWindowController {
 
     func toggle() {
         if window?.isVisible == true {
-            close()
+            hide()
         } else {
             show()
         }
     }
 
     func show() {
-        guard let window = window else { return }
+        guard let window = window, !window.isVisible else { return }
+
+        viewModel.reset()
+        window.setFrame(centeredFrame(for: paletteSize), display: false)
+
+        let finalFrame = window.frame
+        var startFrame = finalFrame
+        startFrame.origin.y -= 12
+
         window.alphaValue = 0
-        window.center()
+        window.setFrame(startFrame, display: false)
+
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
-        
+
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.15
+            context.duration = 0.16
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             window.animator().alphaValue = 1
+            window.animator().setFrame(finalFrame, display: true)
         } completionHandler: {
-            // Critical: Force window to become key AFTER animation
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                window.makeKeyAndOrderFront(nil)
-                NSApp.activate(ignoringOtherApps: true)
-                // Force the hosting view to accept first responder
-                if let hostingView = window.contentView {
-                    _ = hostingView.becomeFirstResponder()
-                }
-            }
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 
-    override func close() {
-        super.close()
-        viewModel.reset()
+    func hide(animated: Bool = true) {
+        guard let window = window, window.isVisible, !isAnimatingHide else { return }
+
+        let finishHide: () -> Void = { [weak self] in
+            guard let self = self else { return }
+            window.orderOut(nil)
+            window.alphaValue = 1
+            self.isAnimatingHide = false
+            self.viewModel.reset()
+        }
+
+        guard animated else {
+            finishHide()
+            return
+        }
+
+        isAnimatingHide = true
+        let currentFrame = window.frame
+        var endFrame = currentFrame
+        endFrame.origin.y -= 8
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            window.animator().alphaValue = 0
+            window.animator().setFrame(endFrame, display: true)
+        } completionHandler: {
+            finishHide()
+        }
+    }
+
+    private func centeredFrame(for size: NSSize) -> NSRect {
+        guard let screenFrame = NSScreen.main?.visibleFrame else {
+            return NSRect(origin: .zero, size: size)
+        }
+
+        let x = screenFrame.midX - (size.width / 2)
+        let y = screenFrame.midY - (size.height / 2)
+        return NSRect(x: x, y: y, width: size.width, height: size.height)
     }
 }
 #endif
