@@ -8,9 +8,23 @@ struct CommandPaletteView: View {
 
     @FocusState private var isTextFieldFocused: Bool
     @State private var dismissWorkItem: DispatchWorkItem?
+    @State private var exampleIndex = 0
+
+    private let exampleTimer = Timer.publish(every: 4.0, on: .main, in: .common).autoconnect()
+    private let examples = [
+        "buy milk tomorrow at 9am",
+        "call Sam this afternoon",
+        "submit expenses next Friday",
+        "take out the bins tonight",
+        "book dentist appointment Monday at 10am"
+    ]
 
     private var canSubmit: Bool {
         !viewModel.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isSubmitting && !viewModel.didCreateReminder
+    }
+
+    private var currentExample: String {
+        examples[exampleIndex % examples.count]
     }
 
     var body: some View {
@@ -40,6 +54,12 @@ struct CommandPaletteView: View {
         .onChange(of: viewModel.focusRequestID) { _ in
             focusTextField()
         }
+        .onReceive(exampleTimer) { _ in
+            guard viewModel.text.isEmpty else { return }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                exampleIndex = (exampleIndex + 1) % examples.count
+            }
+        }
         .onChange(of: viewModel.didCreateReminder) { didCreateReminder in
             guard didCreateReminder else { return }
             NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
@@ -59,7 +79,7 @@ struct CommandPaletteView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(viewModel.didCreateReminder ? Color.green : Color.secondary)
 
-            TextField("Remind me to follow up tomorrow at 9am", text: $viewModel.text)
+            TextField(currentExample, text: $viewModel.text)
                 .focused($isTextFieldFocused)
                 .onSubmit {
                     guard canSubmit else { return }
