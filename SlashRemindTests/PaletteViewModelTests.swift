@@ -97,6 +97,152 @@ final class PaletteViewModelTests: XCTestCase {
         XCTAssertTrue(scheduled.isEmpty)
     }
 
+    func testEmptyDoubleReturnLoadsUpcomingRemindersSortedByDueDate() async throws {
+        let later = UpcomingReminder(
+            id: "later",
+            title: "Later reminder",
+            dueDate: Date(timeIntervalSinceReferenceDate: 2_000)
+        )
+        let sooner = UpcomingReminder(
+            id: "sooner",
+            title: "Sooner reminder",
+            dueDate: Date(timeIntervalSinceReferenceDate: 1_000)
+        )
+        let mockAPI = MockRemindersAPI(upcoming: [later, sooner])
+        let mockScheduler = MockNotificationScheduler()
+        let settings = SettingsStore(defaults: isolatedDefaults())
+
+        let vm = await PaletteViewModel(
+            api: mockAPI,
+            settings: settings,
+            scheduler: mockScheduler,
+            inputParser: MockInputParser(parsed: nil),
+            doubleReturnThreshold: 0.3
+        )
+
+        let firstReturn = Date(timeIntervalSinceReferenceDate: 10_000)
+        await vm.setText("   \n")
+        await vm.handleReturn(now: firstReturn)
+
+        let firstState = await vm.getUpcomingRemindersState()
+        XCTAssertEqual(firstState, .hidden)
+        let firstError = await vm.getError()
+        XCTAssertNil(firstError)
+
+        await vm.handleReturn(now: firstReturn.addingTimeInterval(0.2))
+
+        guard case .loaded(let reminders) = await vm.getUpcomingRemindersState() else {
+            XCTFail("Expected loaded upcoming reminders")
+            return
+        }
+
+        XCTAssertEqual(reminders.map(\.id), ["sooner", "later"])
+
+        let created = await mockAPI.createdReminders
+        XCTAssertTrue(created.isEmpty)
+    }
+
+    func testEmptyReturnOutsideDoublePressThresholdDoesNotRevealOrError() async throws {
+        let mockAPI = MockRemindersAPI(upcoming: [
+            UpcomingReminder(id: "upcoming", title: "Upcoming", dueDate: Date(timeIntervalSinceReferenceDate: 1_000))
+        ])
+        let mockScheduler = MockNotificationScheduler()
+        let settings = SettingsStore(defaults: isolatedDefaults())
+
+        let vm = await PaletteViewModel(
+            api: mockAPI,
+            settings: settings,
+            scheduler: mockScheduler,
+            inputParser: MockInputParser(parsed: nil),
+            doubleReturnThreshold: 0.3
+        )
+
+        let firstReturn = Date(timeIntervalSinceReferenceDate: 10_000)
+        await vm.handleReturn(now: firstReturn)
+        await vm.handleReturn(now: firstReturn.addingTimeInterval(0.5))
+
+        let state = await vm.getUpcomingRemindersState()
+        let error = await vm.getError()
+        XCTAssertEqual(state, .hidden)
+        XCTAssertNil(error)
+    }
+
+    func testEmptyDoubleReturnHandlesPermissionDenied() async throws {
+        let mockAPI = MockRemindersAPI(upcomingError: EventKitError.accessDenied)
+        let mockScheduler = MockNotificationScheduler()
+        let settings = SettingsStore(defaults: isolatedDefaults())
+
+        let vm = await PaletteViewModel(
+            api: mockAPI,
+            settings: settings,
+            scheduler: mockScheduler,
+            inputParser: MockInputParser(parsed: nil),
+            doubleReturnThreshold: 0.3
+        )
+
+        let firstReturn = Date(timeIntervalSinceReferenceDate: 10_000)
+        await vm.handleReturn(now: firstReturn)
+        await vm.handleReturn(now: firstReturn.addingTimeInterval(0.2))
+
+        let state = await vm.getUpcomingRemindersState()
+        let error = await vm.getError()
+        XCTAssertEqual(state, .permissionDenied)
+        XCTAssertNil(error)
+    }
+
+    func testEmptyReturnClosesVisibleUpcomingReminders() async throws {
+        let mockAPI = MockRemindersAPI(upcoming: [
+            UpcomingReminder(id: "upcoming", title: "Upcoming", dueDate: Date(timeIntervalSinceReferenceDate: 1_000))
+        ])
+        let mockScheduler = MockNotificationScheduler()
+        let settings = SettingsStore(defaults: isolatedDefaults())
+
+        let vm = await PaletteViewModel(
+            api: mockAPI,
+            settings: settings,
+            scheduler: mockScheduler,
+            inputParser: MockInputParser(parsed: nil),
+            doubleReturnThreshold: 0.3
+        )
+
+        let firstReturn = Date(timeIntervalSinceReferenceDate: 10_000)
+        await vm.handleReturn(now: firstReturn)
+        await vm.handleReturn(now: firstReturn.addingTimeInterval(0.2))
+
+        guard case .loaded = await vm.getUpcomingRemindersState() else {
+            XCTFail("Expected loaded upcoming reminders")
+            return
+        }
+
+        await vm.handleReturn(now: firstReturn.addingTimeInterval(0.4))
+
+        let state = await vm.getUpcomingRemindersState()
+        XCTAssertEqual(state, .hidden)
+    }
+
+    func testHandleReturnWithTextStillCreatesReminder() async throws {
+        let mockAPI = MockRemindersAPI()
+        let mockScheduler = MockNotificationScheduler()
+        let fixedDate = Date(timeIntervalSince1970: 1704110400)
+        let settings = SettingsStore(defaults: isolatedDefaults())
+
+        let vm = await PaletteViewModel(
+            api: mockAPI,
+            settings: settings,
+            scheduler: mockScheduler,
+            inputParser: MockInputParser(parsed: ParsedReminderInput(title: "Call Sam", dueDate: fixedDate))
+        )
+
+        await vm.setText("Call Sam tomorrow")
+        await vm.handleReturn()
+
+        let reminders = await mockAPI.createdReminders
+        let state = await vm.getUpcomingRemindersState()
+        XCTAssertEqual(reminders.count, 1)
+        XCTAssertEqual(reminders.first?.title, "Call Sam")
+        XCTAssertEqual(state, .hidden)
+    }
+
     private func isolatedDefaults() -> UserDefaults {
         let suiteName = "PaletteViewModelTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
@@ -113,6 +259,10 @@ extension PaletteViewModel {
 
     func getError() -> String? {
         return self.error
+    }
+
+    func getUpcomingRemindersState() -> UpcomingRemindersState {
+        return self.upcomingRemindersState
     }
 }
 

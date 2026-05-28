@@ -63,6 +63,46 @@ final class EventKitRemindersService: RemindersAPI, ReminderListProviding, @unch
 #endif
     }
 
+    func upcomingReminders(limit: Int) async throws -> [UpcomingReminder] {
+        guard limit > 0 else { return [] }
+
+        guard try await requestRemindersAccess() else {
+#if canImport(os)
+            os_log("EventKit access denied while loading upcoming reminders", log: .services, type: .error)
+#endif
+            throw EventKitError.accessDenied
+        }
+
+        let predicate = store.predicateForIncompleteReminders(
+            withDueDateStarting: Date(),
+            ending: nil,
+            calendars: nil
+        )
+
+        let reminders = await withCheckedContinuation { continuation in
+            store.fetchReminders(matching: predicate) { reminders in
+                continuation.resume(returning: reminders ?? [])
+            }
+        }
+
+        return reminders
+            .compactMap { reminder -> UpcomingReminder? in
+                guard let dueDateComponents = reminder.dueDateComponents,
+                      let dueDate = Calendar.current.date(from: dueDateComponents) else {
+                    return nil
+                }
+
+                return UpcomingReminder(
+                    id: reminder.calendarItemIdentifier,
+                    title: reminder.title ?? "Untitled reminder",
+                    dueDate: dueDate
+                )
+            }
+            .sorted { $0.dueDate < $1.dueDate }
+            .prefix(limit)
+            .map { $0 }
+    }
+
     private func requestRemindersAccess() async throws -> Bool {
         if #available(macOS 14.0, *) {
             return try await store.requestFullAccessToReminders()

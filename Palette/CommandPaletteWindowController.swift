@@ -2,6 +2,7 @@
 import AppKit
 import SwiftUI
 import QuartzCore
+import Combine
 
 final class KeyablePanel: NSPanel {
     var onCancel: (() -> Void)?
@@ -28,14 +29,19 @@ final class CommandPaletteWindowController: NSWindowController {
     private var hostingView: NSHostingView<CommandPaletteView>!
     private var isAnimatingHide = false
     private var observers: [NSObjectProtocol] = []
+    private var cancellables: Set<AnyCancellable> = []
 
-    private let paletteSize = NSSize(width: 520, height: 110)
+    private static let paletteWidth: CGFloat = 520
+    private static let minimumPaletteHeight: CGFloat = 110
+    private static var paletteSize: NSSize {
+        NSSize(width: paletteWidth, height: minimumPaletteHeight)
+    }
 
     init(viewModel: PaletteViewModel) {
         self.viewModel = viewModel
 
         let panel = KeyablePanel(
-            contentRect: NSRect(origin: .zero, size: paletteSize),
+            contentRect: NSRect(origin: .zero, size: Self.paletteSize),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -63,6 +69,15 @@ final class CommandPaletteWindowController: NSWindowController {
         self.hostingView.canDrawConcurrently = false
         panel.contentView = self.hostingView
         panel.initialFirstResponder = self.hostingView
+
+        viewModel.$upcomingRemindersState
+            .dropFirst()
+            .sink { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.resizeToFitContent()
+                }
+            }
+            .store(in: &cancellables)
 
         observers = [
             NotificationCenter.default.addObserver(
@@ -108,7 +123,7 @@ final class CommandPaletteWindowController: NSWindowController {
 
         viewModel.reset()
         viewModel.requestFocus()
-        window.setFrame(centeredFrame(for: paletteSize), display: false)
+        window.setFrame(centeredFrame(for: Self.paletteSize), display: false)
 
         let finalFrame = window.frame
         var startFrame = finalFrame
@@ -133,6 +148,7 @@ final class CommandPaletteWindowController: NSWindowController {
                 window.makeFirstResponder(self.hostingView)
                 self.viewModel.requestFocus()
                 NSApp.activate(ignoringOtherApps: true)
+                self.resizeToFitContent(animated: false)
             }
         }
     }
@@ -187,6 +203,30 @@ final class CommandPaletteWindowController: NSWindowController {
         return NSScreen.screens.first { screen in
             NSMouseInRect(mouseLocation, screen.frame, false)
         } ?? NSScreen.main
+    }
+
+    private func resizeToFitContent(animated: Bool = true) {
+        guard let window, window.isVisible else { return }
+
+        hostingView.layoutSubtreeIfNeeded()
+        let fittingHeight = max(Self.minimumPaletteHeight, ceil(hostingView.fittingSize.height))
+        guard abs(window.frame.height - fittingHeight) > 0.5 else { return }
+
+        var targetFrame = window.frame
+        let topY = targetFrame.maxY
+        targetFrame.size = NSSize(width: Self.paletteWidth, height: fittingHeight)
+        targetFrame.origin.y = topY - fittingHeight
+
+        guard animated else {
+            window.setFrame(targetFrame, display: true)
+            return
+        }
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.14
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().setFrame(targetFrame, display: true)
+        }
     }
 }
 #endif

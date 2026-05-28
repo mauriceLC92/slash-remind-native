@@ -30,6 +30,7 @@ struct CommandPaletteView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             inputRow
+            upcomingRemindersView
             footer
         }
         .padding(.horizontal, 14)
@@ -50,6 +51,7 @@ struct CommandPaletteView: View {
         )
         .background(KeyEventHandling(onEscape: onDismiss))
         .preferredColorScheme(.dark)
+        .animation(.easeOut(duration: 0.16), value: viewModel.upcomingRemindersState)
         .onAppear {
             focusTextField()
         }
@@ -88,18 +90,21 @@ struct CommandPaletteView: View {
                             .stroke(.white.opacity(0.12), lineWidth: 0.7)
                     )
 
-                Image(systemName: viewModel.didCreateReminder ? "checkmark.circle.fill" : "calendar")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(viewModel.didCreateReminder ? Color.green : Color.white.opacity(0.84))
+                if viewModel.didCreateReminder {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color.green)
+                } else {
+                    ColorfulCalendarIcon()
+                }
             }
             .frame(width: 32, height: 32)
 
             TextField(currentExample, text: $viewModel.text)
                 .focused($isTextFieldFocused)
                 .onSubmit {
-                    guard canSubmit else { return }
                     Task {
-                        await viewModel.submit()
+                        await viewModel.handleReturn()
                     }
                 }
                 .textFieldStyle(.plain)
@@ -148,6 +153,83 @@ struct CommandPaletteView: View {
         )
     }
 
+    @ViewBuilder
+    private var upcomingRemindersView: some View {
+        switch viewModel.upcomingRemindersState {
+        case .hidden:
+            EmptyView()
+        case .loading:
+            upcomingStateRow(icon: "clock", text: "Loading reminders")
+                .transition(upcomingTransition)
+        case .empty:
+            upcomingStateRow(icon: "checkmark.circle", text: "No upcoming reminders")
+                .transition(upcomingTransition)
+        case .permissionDenied:
+            upcomingStateRow(icon: "lock.fill", text: "Reminders access denied", tint: .orange)
+                .transition(upcomingTransition)
+        case .failed(let message):
+            upcomingStateRow(icon: "exclamationmark.triangle.fill", text: message, tint: .red)
+                .transition(upcomingTransition)
+        case .loaded(let reminders):
+            VStack(spacing: 0) {
+                ForEach(Array(reminders.enumerated()), id: \.element.id) { index, reminder in
+                    UpcomingReminderRow(reminder: reminder)
+
+                    if index < reminders.count - 1 {
+                        Divider()
+                            .overlay(Color.white.opacity(0.08))
+                            .padding(.leading, 38)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .fill(Color.white.opacity(0.035))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 13, style: .continuous)
+                            .stroke(.white.opacity(0.11), lineWidth: 0.8)
+                    )
+            )
+            .transition(upcomingTransition)
+        }
+    }
+
+    private var upcomingTransition: AnyTransition {
+        .opacity.combined(with: .move(edge: .top))
+    }
+
+    private func upcomingStateRow(icon: String, text: String, tint: Color = .secondary) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 20)
+
+            Text(text)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.72))
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+
+            if viewModel.upcomingRemindersState == .loading {
+                ProgressView()
+                    .controlSize(.small)
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 42)
+        .background(
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .fill(Color.white.opacity(0.035))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .stroke(.white.opacity(0.11), lineWidth: 0.8)
+                )
+        )
+    }
+
     private var footer: some View {
         HStack(spacing: 6) {
             let detectedDueDate = viewModel.detectedDueDateDescription
@@ -188,6 +270,61 @@ struct CommandPaletteView: View {
     }
 }
 
+private struct UpcomingReminderRow: View {
+    let reminder: UpcomingReminder
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(Color.blue.opacity(0.18))
+
+                Image(systemName: "bell.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color.blue.opacity(0.88))
+            }
+            .frame(width: 24, height: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(reminder.title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .lineLimit(1)
+
+                Text(formattedDueDate(reminder.dueDate))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.56))
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 44)
+        .contentShape(Rectangle())
+    }
+
+    private func formattedDueDate(_ date: Date) -> String {
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short
+
+        let calendar = Calendar.current
+        let time = timeFormatter.string(from: date)
+
+        if calendar.isDateInToday(date) {
+            return "Today at \(time)"
+        }
+
+        if calendar.isDateInTomorrow(date) {
+            return "Tomorrow at \(time)"
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.setLocalizedDateFormatFromTemplate("EEE, MMM d")
+        return "\(dateFormatter.string(from: date)) at \(time)"
+    }
+}
+
 struct FooterPill: View {
     var icon: String?
     let text: String
@@ -220,6 +357,61 @@ struct FooterPill: View {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
                 .stroke(.white.opacity(0.12), lineWidth: 0.7)
         )
+    }
+}
+
+struct ColorfulCalendarIcon: View {
+    var body: some View {
+        ZStack(alignment: .top) {
+            RoundedRectangle(cornerRadius: 3.2, style: .continuous)
+                .fill(Color.white.opacity(0.9))
+
+            VStack(spacing: 0) {
+                Rectangle()
+                    .fill(Color.blue)
+                    .frame(height: 5)
+                Spacer(minLength: 0)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 3.2, style: .continuous))
+
+            VStack(spacing: 2) {
+                Spacer()
+                    .frame(height: 7)
+
+                HStack(spacing: 2) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        dateDot
+                    }
+                }
+
+                HStack(spacing: 2) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        dateDot
+                    }
+                }
+            }
+
+            HStack(spacing: 5) {
+                bindingTab
+                bindingTab
+            }
+            .offset(y: -1)
+        }
+        .frame(width: 16, height: 16)
+        .shadow(color: Color.blue.opacity(0.18), radius: 4, x: 0, y: 1)
+        .accessibilityLabel("Calendar")
+    }
+
+    private var dateDot: some View {
+        RoundedRectangle(cornerRadius: 0.6, style: .continuous)
+            .fill(Color.black.opacity(0.28))
+            .frame(width: 2, height: 2)
+    }
+
+    private var bindingTab: some View {
+        RoundedRectangle(cornerRadius: 0.8, style: .continuous)
+            .fill(Color.white.opacity(0.96))
+            .frame(width: 2, height: 4)
     }
 }
 
